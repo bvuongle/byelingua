@@ -1,5 +1,5 @@
 # ByeLingua
-*ByeLingual – when you speak two languages, but start losing vocabulary in both of them*
+*byelingual – when you speak two languages, but start losing vocabulary in both of them*
 
 
 ## Członkowie zespołu
@@ -9,22 +9,22 @@ ZPRP zespół 9:
 - Paweł Skorupski 325225
 - Binh Vuong Le Duc 330097
 
-## GitLab Repository:
+## Repozytorium GitLab:
 https://gitlab-stud.elka.pw.edu.pl/zprp-z9/byelingua
 
 ## Harmonogram
 | Data       | Zakres                                                                                                                  |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 23.03.2025 | Design Proposal |
-| 30.04.2025 | Projekt bazy danych, UI design, logowanie i rejestracja - frontend i backend |
+| 23.03.2025 | Design proposal                                                                                                         |
+| 30.04.2025 | Projekt bazy danych, UI design, logowanie i rejestracja – frontend i backend                                            |
 | 06.04.2025 | Ładowanie plików CSV, integracja ładowania plików z aplikacji frontendowej, zapisywanie dokumentu                       |
-| 13.04.2025 | Tłumaczenie tekstu - integracja z istniejącymi modelami, frontend - wyświetlanie wierszy i możliwość wprowadzania zmian |
-| 20.04.2025 | **Funkcjonalny prototyp** - Możliwość wyboru kolumn i wierszy do tłumaczenia                                            |
-| 27.04.2024 | Interfejs użytkownika i integracja – udoskonalenie przepływu aplikacji przed wdrożeniem kolejnych funkcji |
-| 04.05.2025 | Funkcjonalność rozpoznawania języka oryginalnego |
-| 11.05.2025 | Testy integracyjne i optymalizacja procesu tłumaczenia oraz przetwarzania danych |
-| 18.05.2025 | Końcowe poprawki  |
-| 25.05.2025 |  Przygotowanie finalnej dokumentacji, demonstracja projektu                                                             |
+| 13.04.2025 | Tłumaczenie tekstu – integracja z istniejącymi modelami, frontend – wyświetlanie wierszy i możliwość wprowadzania zmian |
+| 20.04.2025 | **Funkcjonalny prototyp** – możliwość wyboru kolumn i wierszy do tłumaczenia                                            |
+| 27.04.2024 | Interfejs użytkownika i integracja – udoskonalenie przepływu aplikacji przed wdrożeniem kolejnych funkcji               |
+| 04.05.2025 | Funkcjonalność rozpoznawania języka oryginalnego                                                                        |
+| 11.05.2025 | Testy integracyjne i optymalizacja procesu tłumaczenia oraz przetwarzania danych                                        |
+| 18.05.2025 | Końcowe poprawki                                                                                                        |
+| 25.05.2025 | Przygotowanie finalnej dokumentacji, demonstracja projektu                                                              |
 
 
 ## Bibliografia
@@ -70,14 +70,14 @@ Aplikacja powinna działać w następujący sposób:
     - JWT Authentication
     - SQLModel
     - Pydantic
-    - Modele językowe:
-        - MarianMT - tłumaczenie
-        - … TODO detekcja języka
+    - Modele językowe (wstępnie):
+        - MarianMT – tłumaczenie
+        - lingua-py – rozpoznawanie języka
     - Zarządzanie kodem:
         - uv – zarządzanie pakietami
-        - Black – formatter
         - Flake8 – linter
-        - Mypy - statyczna analiza kodu
+        - Black – formatter
+        - Mypy – statyczna analiza kodu
 - Frontend:
     - Typescript
     - React v19
@@ -85,7 +85,7 @@ Aplikacja powinna działać w następujący sposób:
     - Chakra UI
     - Nginx
 - Dokumentacja: Sphinx / mkdocs (TBD)
-- Gitlab Issues - progress tracking
+- Gitlab Issues – śledzenie postępu
 - **CI**/CD (testy automatyczne)
 
 
