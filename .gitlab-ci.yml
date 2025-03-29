@@ -6,11 +6,12 @@ test:
   tags:
     - test
 
-build:
+build-production-env:
   stage: build
   script:
     - TAG=prod FRONTEND_ENV=production sh ./scripts/build.sh
-  only:
-    - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master"
+    - if: $CI_COMMIT_REF_NAME == "master" && $CI_PIPELINE_SOURCE != "merge_request_event"
   tags:
     - build
