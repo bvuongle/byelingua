@@ -1,0 +1,16 @@
+test:
+  stage: test
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  script:
+    - sh ./scripts/test-gitlab-ci.sh
+  tags:
+    - test
+
+build:
+  stage: build
+  script:
+    - TAG=prod FRONTEND_ENV=production sh ./scripts/build.sh
+  only:
+    - main
+  tags:
+    - build
