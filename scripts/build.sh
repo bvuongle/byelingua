@@ -2,6 +2,7 @@
 
 # Exit in case of error
 set -e
+echo "Running as: $USER"
 
 TAG=${TAG?Variable not set} \
 FRONTEND_ENV=${FRONTEND_ENV-production} \
