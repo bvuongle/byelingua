@@ -6,7 +6,6 @@ import {
     Heading,
     Table,
     FileUpload,
-    Icon
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Link } from "@tanstack/react-router"
@@ -123,10 +122,8 @@ function FilesPage() {
             >
                 <FileUpload.HiddenInput />
                 <FileUpload.Dropzone minHeight="10rem">
-                    <Icon size="md" color="fg.muted">
-                        <LuUpload />
-                    </Icon>
                     <FileUpload.DropzoneContent>
+                        <LuUpload/>
                         <Box>Drag and drop files here</Box>
                         <Box color="fg.muted">.xlsx, .xls, .csv</Box>
                         <Box color="fg.muted">Maximum file size: 10MB</Box>
