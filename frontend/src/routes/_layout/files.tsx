@@ -5,26 +5,27 @@ import {
     Flex,
     Heading,
     Table,
-    Input,
+    FileUpload,
+    Icon
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useState } from "react"
 import { format } from "date-fns"
 
 import mockFiles from "@/mock/files.json"
 import useCustomToast from "../../hooks/useCustomToast";
+import {LuSend, LuUpload} from "react-icons/lu";
 
-const PER_PAGE = 10
-
+const MAX_FILES_ALLOWED = 5
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 const getFiles = async () => {
-    // Fetch from mock data
     return mockFiles
 }
 
+// @ts-ignore
 const uploadFile = async ({ file }) => {
-    // Mock uploading by adding the file to mockFiles.json (handled on frontend for now)
     const newFile = {
         id: Date.now(),
         filename: file.name,
@@ -79,7 +80,7 @@ function FilesTable() {
 function FilesPage() {
     const toast = useCustomToast()
     const queryClient = useQueryClient()
-    const [selectedFile, setSelectedFile] = useState(null)
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
     const mutation = useMutation({
         mutationFn: uploadFile,
@@ -93,9 +94,13 @@ function FilesPage() {
     })
 
     const handleUpload = () => {
-        if (!selectedFile) return
+        if (selectedFiles.length === 0) return
 
-        mutation.mutate({ file: selectedFile })
+        selectedFiles.forEach(file => {
+            mutation.mutate({ file })
+        })
+
+        setSelectedFiles([])
     }
 
     return (
@@ -104,14 +109,37 @@ function FilesPage() {
                 File Management
             </Heading>
 
-            <Flex gap={4} align="center" pb={4}>
-                <Input
-                    type="file"
-                    accept=".csv,.xlsx"
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                />
+            <FileUpload.Root
+              width="100%"
+
+              alignItems="stretch"
+              accept={[
+                  "text/csv",
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              ]}
+              maxFiles={MAX_FILES_ALLOWED}
+              maxFileSize={MAX_FILE_SIZE}
+              onFileAccept={(details) => {setSelectedFiles(details.files)}}
+            >
+                <FileUpload.HiddenInput />
+                <FileUpload.Dropzone minHeight="10rem">
+                    <Icon size="md" color="fg.muted">
+                        <LuUpload />
+                    </Icon>
+                    <FileUpload.DropzoneContent>
+                        <Box>Drag and drop files here</Box>
+                        <Box color="fg.muted">.xlsx, .xls, .csv</Box>
+                        <Box color="fg.muted">Maximum file size: 10MB</Box>
+                    </FileUpload.DropzoneContent>
+                </FileUpload.Dropzone>
+
+                <FileUpload.List showSize clearable files={selectedFiles}/>
+
+            </FileUpload.Root>
+
+            <Flex justify="flex-end" py={4}>
                 <Button colorScheme="blue" onClick={handleUpload}>
-                    Upload
+                    <LuSend />Submit
                 </Button>
             </Flex>
 
