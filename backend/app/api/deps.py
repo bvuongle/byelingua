@@ -8,6 +8,7 @@ from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlmodel import Session
 
+from app.api.file_service import FileService
 from app.core import security
 from app.core.config import settings
 from app.core.db import engine
@@ -55,3 +56,10 @@ def get_current_active_superuser(current_user: CurrentUser) -> User:
             status_code=403, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+def get_file_service(session: SessionDep) -> FileService:
+    return FileService(session)
+
+
+FileServiceDep = Annotated[FileService, Depends(get_file_service, )]
