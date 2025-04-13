@@ -1,7 +1,11 @@
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
 
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, Column, JSON
+from pathlib import Path
 
 
 # Shared properties
@@ -44,6 +48,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    files: list["File"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -111,3 +116,27 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+
+class FileFormat(str, Enum):
+    csv = "csv"
+
+
+class FileBase(SQLModel):
+    filename: str = Field(max_length=255)
+    format: FileFormat = Field(default=FileFormat.csv)
+    rows_completed: int = Field(default=0)
+    selected_columns: List[int] = Field(sa_column=Column(JSON), default=[])
+    created_at: datetime = Field(default_factory=lambda: datetime.now())
+    last_modified: datetime = Field(default_factory=lambda: datetime.now())
+    file_path: str = Field(primary_key=True, max_length=255)
+
+
+class File(FileBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+
+    owner: User | None = Relationship(back_populates="files")
+
+class FilePublic(FileBase):
+    id: uuid.UUID

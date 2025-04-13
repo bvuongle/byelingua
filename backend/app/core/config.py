@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
+    # File upload settings
+    UPLOAD_PATH: str = "storage/uploads"
+    UPLOAD_MAX_SIZE: int = 10 * 1024 * 1024  # 10 MB
+    UPLOAD_ALLOWED_FORMATS: list[str] = [
+        "csv",
+    ]
+
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
