@@ -33,8 +33,8 @@ class LocalStorageManager(StorageManager):
         local_file_path = self.storage_path / file_path
         self._handle_file_not_found(local_file_path)
 
-        with open(local_file_path, 'rb') as f:
-            return f.read()
+        async with aiofiles.open(local_file_path, 'rb') as f:
+            return await f.read()
 
     def delete_file(self, file_path: Path) -> None:
         local_file_path = self.storage_path / file_path

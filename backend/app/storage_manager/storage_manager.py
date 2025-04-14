@@ -14,7 +14,7 @@ class StorageManager(ABC):
         pass
 
     @abstractmethod
-    def read_file(self, file_path: Path) -> bytes:
+    async def read_file(self, file_path: Path) -> bytes:
         """Read a file from the storage."""
         pass
 

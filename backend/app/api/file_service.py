@@ -18,7 +18,7 @@ class FileService:
         self.storage_manager = LocalStorageManager(Path(settings.UPLOAD_PATH))
 
     @staticmethod
-    async def validate_file(file: UploadFile) -> FileFormat:
+    def validate_file(file: UploadFile) -> FileFormat:
         """Validate file before upload."""
         # Check file size
         file.file.seek(0, os.SEEK_END)
@@ -52,7 +52,7 @@ class FileService:
     async def upload_file(self, file: UploadFile, user: User) -> File:
         """Upload a file to the server."""
         # Validate file
-        file_format = await self.validate_file(file)
+        file_format = self.validate_file(file)
 
         # Generate unique filename to prevent collisions
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
@@ -79,10 +79,11 @@ class FileService:
                 filename=file.filename,
                 format=file_format,
                 owner_id=user.id,
-                file_path=str(file_path),
+                file_path=file_path,
             )
             return crud.create_file(session=self.db, file_in=db_file, owner_id=user.id)
-
+        except HTTPException as e:
+            raise e
         except Exception as e:
             # Clean up file if database operation fails
             if self.storage_manager.file_exists(file_path):
@@ -92,24 +93,22 @@ class FileService:
                 detail=f"Failed to upload file: {str(e)}",
             )
 
-    async def download_file(
-        self, file_id: uuid.UUID, user: User
-    ) -> Response:
+    async def download_file(self, file_id: uuid.UUID, user: User) -> Response:
         """Get file from the server."""
         file_record = self._get_file_record(file_id, user.id)
 
         # Check if file exists
-        if not self.storage_manager.file_exists(Path(file_record.file_path)):
+        if not self.storage_manager.file_exists(file_record.file_path):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="File not found on server"
             )
-        contents = await self.storage_manager.read_file(Path(file_record.file_path))
+        contents = await self.storage_manager.read_file(file_record.file_path)
         response = Response(
             content=contents,
             media_type="application/octet-stream",
             headers={
                 "Content-Disposition": f"attachment; filename={file_record.filename}",
-            }
+            },
         )
         return response
 
@@ -119,7 +118,7 @@ class FileService:
 
         # Delete file from disk
         try:
-            self.storage_manager.delete_file(Path(file_record.file_path))
+            self.storage_manager.delete_file(file_record.file_path)
         except (FileNotFoundError, PermissionError) as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
