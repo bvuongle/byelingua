@@ -1,11 +1,14 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
-
-from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel, Column, JSON
 from pathlib import Path
+from typing import List, Optional, Any
+
+import sqlalchemy.types as types
+from pydantic import EmailStr
+from sqlalchemy import Dialect
+from sqlalchemy.sql.type_api import _T
+from sqlmodel import Field, Relationship, SQLModel, Column, JSON
 
 
 # Shared properties
@@ -122,6 +125,27 @@ class FileFormat(str, Enum):
     csv = "csv"
 
 
+class PathType(types.TypeDecorator):
+    """
+    Type Decorator to create Path objects form database data
+    """
+
+    impl = types.String
+    cache_ok = True
+
+    def process_bind_param(self, value: Optional[_T], dialect: Dialect) -> Any:
+        if isinstance(value, Path):
+            return str(value)
+        return value
+
+    def process_result_value(
+        self, value: Optional[Any], dialect: Dialect
+    ) -> Optional[_T]:
+        if value is not None:
+            return Path(value)
+        return value
+
+
 class FileBase(SQLModel):
     filename: str = Field(max_length=255)
     format: FileFormat = Field(default=FileFormat.csv)
@@ -129,14 +153,17 @@ class FileBase(SQLModel):
     selected_columns: List[int] = Field(sa_column=Column(JSON), default=[])
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
-    file_path: str = Field(primary_key=True, max_length=255)
+    file_path: Path = Field(sa_column=Column(PathType))
 
 
 class File(FileBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    owner_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, ondelete="CASCADE"
+    )
 
     owner: User | None = Relationship(back_populates="files")
+
 
 class FilePublic(FileBase):
     id: uuid.UUID
