@@ -4,6 +4,13 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
+  FilesUploadFileData,
+  FilesUploadFileResponse,
+  FilesListFilesResponse,
+  FilesDownloadFileData,
+  FilesDownloadFileResponse,
+  FilesDeleteFileData,
+  FilesDeleteFileResponse,
   ItemsReadItemsData,
   ItemsReadItemsResponse,
   ItemsCreateItemData,
@@ -23,6 +30,8 @@ import type {
   LoginResetPasswordResponse,
   LoginRecoverPasswordHtmlContentData,
   LoginRecoverPasswordHtmlContentResponse,
+  PrivateCreateUserData,
+  PrivateCreateUserResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -45,6 +54,89 @@ import type {
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
 } from "./types.gen"
+
+export class FilesService {
+  /**
+   * Upload File
+   * Upload a file to the server.
+   * @param data The data for the request.
+   * @param data.formData
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static uploadFile(
+    data: FilesUploadFileData,
+  ): CancelablePromise<FilesUploadFileResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/files/upload",
+      formData: data.formData,
+      mediaType: "multipart/form-data",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * List Files
+   * List all files uploaded by the current user.
+   * @returns FilePublic Successful Response
+   * @throws ApiError
+   */
+  public static listFiles(): CancelablePromise<FilesListFilesResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/files/",
+    })
+  }
+
+  /**
+   * Download File
+   * Download a file from the server.
+   * @param data The data for the request.
+   * @param data.fileId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static downloadFile(
+    data: FilesDownloadFileData,
+  ): CancelablePromise<FilesDownloadFileResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/files/{file_id}/download",
+      path: {
+        file_id: data.fileId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete File
+   * Delete a file from the server.
+   * @param data The data for the request.
+   * @param data.fileId
+   * @returns Message Successful Response
+   * @throws ApiError
+   */
+  public static deleteFile(
+    data: FilesDeleteFileData,
+  ): CancelablePromise<FilesDeleteFileResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/files/{file_id}",
+      path: {
+        file_id: data.fileId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
 
 export class ItemsService {
   /**
@@ -265,6 +357,30 @@ export class LoginService {
       path: {
         email: data.email,
       },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
+
+export class PrivateService {
+  /**
+   * Create User
+   * Create a new user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns UserPublic Successful Response
+   * @throws ApiError
+   */
+  public static createUser(
+    data: PrivateCreateUserData,
+  ): CancelablePromise<PrivateCreateUserResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/private/users/",
+      body: data.requestBody,
+      mediaType: "application/json",
       errors: {
         422: "Validation Error",
       },
