@@ -12,7 +12,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useState } from "react"
 import { format } from "date-fns"
 
-import useCustomToast from "../../hooks/useCustomToast";
+import useCustomToast from "@/hooks/useCustomToast";
 import {LuSend, LuUpload} from "react-icons/lu";
 import {FilesService} from "@/client";
 
@@ -27,7 +27,7 @@ const uploadFile = async ({ file }: { file: File }) => {
   return FilesService.uploadFile({formData: {file}});
 };
 
-export const Route = createFileRoute("/_layout/files")({
+export const Route = createFileRoute("/_layout/files/")({
   component: FilesPage,
   validateSearch: () => ({}),
 });
@@ -121,7 +121,7 @@ function FilesTable() {
                 size="xs"
                 colorScheme="red"
                 m="1"
-                onClick={() => navigate({ params: { fileId: file.id } })}
+                onClick={() => navigate({ to: `./${file.id}` })}
               >
                 Preview
               </Button>
