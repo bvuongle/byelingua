@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import File, FileBase, Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models import File, FileBase, User, UserCreate, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -33,7 +33,7 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
-    session_user = session.exec(statement).first()
+    session_user = session.exec(statement).first()  # type: ignore
     return session_user
 
 
@@ -46,14 +46,6 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     return db_user
 
 
-def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
-    db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
-    session.add(db_item)
-    session.commit()
-    session.refresh(db_item)
-    return db_item
-
-
 def create_file(*, session: Session, file_in: FileBase, owner_id: uuid.UUID) -> File:
     db_file = File.model_validate(file_in, update={"owner_id": owner_id})
     session.add(db_file)
@@ -63,14 +55,13 @@ def create_file(*, session: Session, file_in: FileBase, owner_id: uuid.UUID) -> 
 
 
 def delete_file(*, session: Session, file_id: uuid.UUID) -> None:
-    statement = select(Item).where(Item.id == file_id)
-    db_item = session.exec(statement).first()
-    if db_item:
-        session.delete(db_item)
-        session.commit()
+    statement = select(File).where(File.id == file_id)
+    db_item = session.exec(statement).first()  # type: ignore
+    session.delete(db_item)
+    session.commit()
 
 
 def get_file(*, session: Session, file_id: uuid.UUID) -> File | None:
     statement = select(File).where(File.id == file_id)
-    db_item = session.exec(statement).first()
+    db_item = session.exec(statement).first()  # type: ignore
     return db_item
