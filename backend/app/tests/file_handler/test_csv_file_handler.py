@@ -10,42 +10,6 @@ from app.models import File
 
 
 @pytest.fixture
-def sample_csv():
-    content = "Name,Age,Email,City,State,Country,Phone\nJohn,30,john@example.com,New York,NY,USA,1234567890"
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, newline="") as tmp:
-        tmp.write(content)
-        tmp.seek(0)
-        yield Path(tmp.name)
-
-
-@pytest.fixture
-def empty_csv():
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, newline="") as tmp:
-        tmp.seek(0)
-        yield Path(tmp.name)
-
-
-@pytest.fixture
-def malformed_csv():
-    content = "Name;Age;Email\nJohn;30;john@example.com"  # Incorrect delimiter
-    with tempfile.NamedTemporaryFile(mode="w+", delete=False, newline="") as tmp:
-        tmp.write(content)
-        tmp.seek(0)
-        yield Path(tmp.name)
-
-
-@pytest.fixture
-def mock_storage_manager():
-    manager = Mock()
-
-    def open_file(file_path, mode):
-        return open(file_path, mode, newline="")
-
-    manager.open_file.side_effect = open_file
-    return manager
-
-
-@pytest.fixture
 def mock_file(sample_csv):
     file = Mock(spec=File)
     file.file_path = sample_csv
@@ -67,13 +31,15 @@ def test_read_selected_columns(handler):
     result = handler.read_row(1)
     assert result == ["30", "USA", "1234567890"]
 
+
 def test_read_negative_row(handler):
     with pytest.raises(IndexError, match="Row number cannot be negative: -1"):
         handler.read_row(-1)
 
+
 def test_write_selected_columns(handler, mock_file):
     handler.write_row(1, ["35", "Canada", "9876543210"])
-    with open(mock_file.file_path, "r") as f:
+    with open(mock_file.file_path) as f:
         lines = list(csv.reader(f))
     assert lines[1] == [
         "John",
@@ -137,3 +103,54 @@ def test_malformed_csv_read(mock_storage_manager, malformed_csv):
     handler = CSVFileHandler(mock_storage_manager, file)
     with pytest.raises(IndexError):
         handler.read_row(1)
+
+
+def test_validate_file(handler):
+    assert handler.validate_file() is True
+
+
+def test_validate_file_empty(mock_storage_manager, empty_csv):
+    file = Mock(spec=File)
+    file.file_path = empty_csv
+    file.selected_columns = [0]
+    handler = CSVFileHandler(mock_storage_manager, file)
+    assert handler.validate_file() is False
+
+
+@pytest.mark.parametrize(
+    "content, expected",
+    [
+        (
+            "Name,Age,Email\nJohn,30\nJane,25,jane@example.com,ExtraColumn",
+            False,
+        ),  # Inconsistent column counts
+        (
+            "Name,Age,Email\nJohn,30,john@example.com,unexpected_data\nJane,25,jane@example.com",
+            False,
+        ),  # Incorrect separator
+        ("", False),  # Empty file
+        (
+            "Name,Age,Email\nJohn,30,john@example.com\nJane",
+            False,
+        ),  # Missing values in a row
+        (
+            "Name,Age,Email\nJohn,30,john@example.com\nJane,25,jane@example.com\n",
+            True,
+        ),  # Trailing newline
+        (
+            "Name;Age;Email\nJohn;30;john@example.com\nJane;25;jane@example.com",
+            True,
+        ),  # Delimiter will be ignored
+    ],
+)
+def test_validate_edge_cases(mock_storage_manager, content, expected):
+    with tempfile.NamedTemporaryFile(mode="w+", delete=False, newline="") as tmp:
+        tmp.write(content)
+        tmp.seek(0)
+        malformed_csv_path = Path(tmp.name)
+
+    file = Mock(spec=File)
+    file.file_path = malformed_csv_path
+    file.selected_columns = [1]
+    handler = CSVFileHandler(mock_storage_manager, file)
+    assert handler.validate_file() is expected

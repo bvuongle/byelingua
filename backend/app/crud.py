@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate, File, FileBase
+from app.models import File, FileBase, Item, ItemCreate, User, UserCreate, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -53,6 +53,7 @@ def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -
     session.refresh(db_item)
     return db_item
 
+
 def create_file(*, session: Session, file_in: FileBase, owner_id: uuid.UUID) -> File:
     db_file = File.model_validate(file_in, update={"owner_id": owner_id})
     session.add(db_file)
@@ -60,12 +61,14 @@ def create_file(*, session: Session, file_in: FileBase, owner_id: uuid.UUID) -> 
     session.refresh(db_file)
     return db_file
 
+
 def delete_file(*, session: Session, file_id: uuid.UUID) -> None:
     statement = select(Item).where(Item.id == file_id)
     db_item = session.exec(statement).first()
     if db_item:
         session.delete(db_item)
         session.commit()
+
 
 def get_file(*, session: Session, file_id: uuid.UUID) -> File | None:
     statement = select(File).where(File.id == file_id)

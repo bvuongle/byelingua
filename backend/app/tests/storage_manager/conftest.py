@@ -1,11 +1,11 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
+from tempfile import TemporaryDirectory
 
 import pytest
 
 from app.storage_manager.local_storage import LocalStorageManager
 from app.storage_manager.storage_manager import StorageManager
-from tempfile import TemporaryDirectory
 
 
 @pytest.fixture(scope="session", autouse=True)

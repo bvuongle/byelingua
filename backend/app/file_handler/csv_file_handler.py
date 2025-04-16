@@ -1,7 +1,11 @@
-from app.file_handler.file_handler import FileHandler
 import csv
 
+from app.file_handler.file_handler import FileHandler
+from app.file_handler.file_handler_factory import FileHandlerFactory
+from app.models import FileFormat
 
+
+@FileHandlerFactory.register_handler(FileFormat.csv)
 class CSVFileHandler(FileHandler):
     """
     File Handler for CSV Files.
@@ -58,3 +62,17 @@ class CSVFileHandler(FileHandler):
             except StopIteration:
                 return 0
             return sum(1 for _ in reader)
+
+    def validate_file(self) -> bool:
+        with self.storage_manager.open_file(self.file.file_path, "r") as file:
+            try:
+                reader = csv.reader(file)
+                headers = next(reader)
+                if not headers:
+                    return False
+                for row in reader:
+                    if len(row) != len(headers):
+                        return False
+            except (StopIteration, csv.Error):
+                return False
+        return True

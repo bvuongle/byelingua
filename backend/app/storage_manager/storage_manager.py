@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
+from collections.abc import Generator
 from pathlib import Path
-from typing import TextIO, Generator
+from typing import TextIO
 
 
 class StorageManager(ABC):
+    @abstractmethod
     def __init__(self):
         pass
 

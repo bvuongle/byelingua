@@ -1,6 +1,8 @@
 import logging
+import pkgutil
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -121,3 +123,10 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except InvalidTokenError:
         return None
+
+
+def import_file_handlers() -> None:
+    """Import all file handlers from the file_handlers package."""
+    package = "app.file_handler"
+    for _, name, _ in pkgutil.iter_modules([package.replace(".", "/")]):
+        import_module(f"{package}.{name}")

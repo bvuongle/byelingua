@@ -4,13 +4,13 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-from fastapi import UploadFile, HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from fastapi.responses import Response
 from sqlmodel import Session
 
 from app.api.file_service import FileService
 from app.core.config import settings
-from app.models import FileFormat, File
+from app.models import File, FileFormat
 from app.tests.utils.user import create_random_user
 
 
@@ -85,20 +85,26 @@ async def test_upload_file_success(file_service, mock_upload_file, db):
     with mock.patch("app.crud.create_file") as mock_create_file, mock.patch(
         "uuid.uuid4", return_value=mock_uuid
     ):
-        mock_db_file = mock.MagicMock(spec=File)
-        mock_db_file.id = mock_uuid
-        mock_db_file.filename = "test.txt"
-        mock_create_file.return_value = mock_db_file
+        with mock.patch(
+            "app.file_handler.file_handler_factory.FileHandlerFactory.create_handler"
+        ) as mock_create_handler:
+            mock_handler = mock.MagicMock()
+            mock_handler.validate_file.return_value = True
+            mock_create_handler.return_value = mock_handler
+            mock_db_file = mock.MagicMock(spec=File)
+            mock_db_file.id = mock_uuid
+            mock_db_file.filename = "test.txt"
+            mock_create_file.return_value = mock_db_file
 
-        settings.UPLOAD_ALLOWED_FORMATS = [FileFormat.csv]
-        settings.UPLOAD_MAX_SIZE = 1000000
+            settings.UPLOAD_ALLOWED_FORMATS = [FileFormat.csv]
+            settings.UPLOAD_MAX_SIZE = 1000000
 
-        result = await file_service.upload_file(mock_upload_file, user)
+            result = await file_service.upload_file(mock_upload_file, user)
 
-        assert result.id == mock_uuid
-        assert result.filename == "test.txt"
-        file_service.storage_manager.create_file.assert_called_once()
-        mock_create_file.assert_called_once()
+            assert result.id == mock_uuid
+            assert result.filename == "test.txt"
+            file_service.storage_manager.create_file.assert_called_once()
+            mock_create_file.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -233,24 +239,24 @@ def test_get_file_record_success(file_service, db):
     mock_file_record.owner_id = user.id
 
     with mock.patch("app.crud.get_file", return_value=mock_file_record):
-        result = file_service._get_file_record(file_uuid, user.id)
+        result = file_service.get_file_record(file_uuid, user.id)
 
         assert result == mock_file_record
 
 
-def test_get_file_record_not_found(file_service, db):
+def test_get_file_record_not_found(file_service):
     user_id = uuid.uuid4()
     file_uuid = uuid.uuid4()
 
     with mock.patch("app.crud.get_file", return_value=None):
         with pytest.raises(HTTPException) as exc_info:
-            file_service._get_file_record(file_uuid, user_id)
+            file_service.get_file_record(file_uuid, user_id)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert "File not found" in exc_info.value.detail
 
 
-def test_get_file_record_not_owner(file_service, db):
+def test_get_file_record_not_owner(file_service):
     user_id = uuid.uuid4()
     different_user_id = uuid.uuid4()
     file_uuid = uuid.uuid4()
@@ -261,7 +267,26 @@ def test_get_file_record_not_owner(file_service, db):
     with mock.patch("app.crud.get_file", return_value=mock_file_record):
         # Execute and verify
         with pytest.raises(HTTPException) as exc_info:
-            file_service._get_file_record(file_uuid, user_id)
+            file_service.get_file_record(file_uuid, user_id)
 
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
         assert "do not have permission" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_upload_file_validation_fails(file_service, mock_upload_file, db):
+    user = create_random_user(db)
+
+    with mock.patch(
+        "app.file_handler.file_handler_factory.FileHandlerFactory.create_handler"
+    ) as mock_create_handler:
+        mock_handler = mock.MagicMock()
+        mock_handler.validate_file.return_value = False
+        mock_create_handler.return_value = mock_handler
+
+        with pytest.raises(HTTPException) as exc_info:
+            await file_service.upload_file(mock_upload_file, user)
+
+        assert exc_info.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "File validation failed" in exc_info.value.detail
+        file_service.storage_manager.delete_file.assert_called_once()

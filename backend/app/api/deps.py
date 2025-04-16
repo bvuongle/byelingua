@@ -28,7 +28,7 @@ SessionDep = Annotated[Session, Depends(get_db)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User:
+def get_current_user(session: SessionDep, token: TokenDep) -> type[User]:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
@@ -62,4 +62,9 @@ def get_file_service(session: SessionDep) -> FileService:
     return FileService(session)
 
 
-FileServiceDep = Annotated[FileService, Depends(get_file_service, )]
+FileServiceDep = Annotated[
+    FileService,
+    Depends(
+        get_file_service,
+    ),
+]

@@ -1,8 +1,16 @@
 import openpyxl
+from openpyxl.utils.exceptions import (
+    InvalidFileException,
+    ReadOnlyWorkbookException,
+    SheetTitleException,
+)
 
 from app.file_handler.file_handler import FileHandler
+from app.file_handler.file_handler_factory import FileHandlerFactory
+from app.models import FileFormat
 
 
+@FileHandlerFactory.register_handler(FileFormat.xlsx)
 class XLSXFileHandler(FileHandler):
     """
     File Handler for XLSX Files. Reads and writes only specified selected_columns.
@@ -67,3 +75,22 @@ class XLSXFileHandler(FileHandler):
             wb = openpyxl.load_workbook(file, read_only=True)
             sheet = wb.active
             return sheet.max_row - 1  # excluding header
+
+    def validate_file(self) -> bool:
+        with self.storage_manager.open_file(self.file.file_path, "rb") as file:
+            try:
+                wb = openpyxl.load_workbook(file, read_only=True)
+                sheet = wb.active
+                headers = [
+                    cell.value for cell in next(sheet.iter_rows(min_row=1, max_row=1))
+                ]
+                if not headers:
+                    return False
+                return True
+            except (
+                InvalidFileException,
+                ReadOnlyWorkbookException,
+                SheetTitleException,
+                StopIteration,
+            ):
+                return False
