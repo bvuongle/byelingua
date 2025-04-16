@@ -2,13 +2,13 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Any
+from typing import Any
 
 import sqlalchemy.types as types
 from pydantic import EmailStr
 from sqlalchemy import Dialect
 from sqlalchemy.sql.type_api import _T
-from sqlmodel import Field, Relationship, SQLModel, Column, JSON
+from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 
 # Shared properties
@@ -123,6 +123,7 @@ class NewPassword(SQLModel):
 
 class FileFormat(str, Enum):
     csv = "csv"
+    xlsx = "xlsx"
 
 
 class PathType(types.TypeDecorator):
@@ -133,14 +134,12 @@ class PathType(types.TypeDecorator):
     impl = types.String
     cache_ok = True
 
-    def process_bind_param(self, value: Optional[_T], dialect: Dialect) -> Any:
+    def process_bind_param(self, value: _T | None, dialect: Dialect) -> Any:
         if isinstance(value, Path):
             return str(value)
         return value
 
-    def process_result_value(
-        self, value: Optional[Any], dialect: Dialect
-    ) -> Optional[_T]:
+    def process_result_value(self, value: Any | None, dialect: Dialect) -> _T | None:
         if value is not None:
             return Path(value)
         return value
@@ -150,7 +149,7 @@ class FileBase(SQLModel):
     filename: str = Field(max_length=255)
     format: FileFormat = Field(default=FileFormat.csv)
     rows_completed: int = Field(default=0)
-    selected_columns: List[int] = Field(sa_column=Column(JSON), default=[])
+    selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
     file_path: Path = Field(sa_column=Column(PathType))
@@ -167,3 +166,14 @@ class File(FileBase, table=True):
 
 class FilePublic(FileBase):
     id: uuid.UUID
+
+
+class ColumnTranslation(SQLModel):
+    column_name: str
+    original: str
+    translation: str | None
+
+
+class FileRow(SQLModel):
+    row_index: int | None
+    columns: list[ColumnTranslation]

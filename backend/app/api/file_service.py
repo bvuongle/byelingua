@@ -2,13 +2,14 @@ import os
 import uuid
 from pathlib import Path
 
-from fastapi import UploadFile, HTTPException, status
+from fastapi import HTTPException, UploadFile, status
 from fastapi.responses import Response
 from sqlmodel import Session
 
 from app import crud
 from app.core.config import settings
-from app.models import File, FileFormat, User, FileBase
+from app.file_handler.file_handler_factory import FileHandlerFactory
+from app.models import File, FileBase, FileFormat, User
 from app.storage_manager.local_storage import LocalStorageManager
 
 
@@ -62,7 +63,6 @@ class FileService:
         try:
             # Get file size
             file.file.seek(0, os.SEEK_END)
-            file_size = file.file.tell()
             file.file.seek(0)  # Reset file position
 
             content = await file.read()
@@ -81,6 +81,18 @@ class FileService:
                 owner_id=user.id,
                 file_path=file_path,
             )
+
+            file_handler = FileHandlerFactory.create_handler(
+                self.storage_manager,
+                db_file,
+            )
+            if not file_handler.validate_file():
+                self.storage_manager.delete_file(file_path)
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="File validation failed",
+                )
+
             return crud.create_file(session=self.db, file_in=db_file, owner_id=user.id)
         except HTTPException as e:
             raise e
@@ -95,7 +107,7 @@ class FileService:
 
     async def download_file(self, file_id: uuid.UUID, user: User) -> Response:
         """Get file from the server."""
-        file_record = self._get_file_record(file_id, user.id)
+        file_record = self.get_file_record(file_id, user.id)
 
         # Check if file exists
         if not self.storage_manager.file_exists(file_record.file_path):
@@ -114,21 +126,20 @@ class FileService:
 
     async def delete_file(self, file_id: uuid.UUID, user: User) -> None:
         """Delete file from the server."""
-        file_record = self._get_file_record(file_id, user.id)
+        file_record = self.get_file_record(file_id, user.id)
 
         # Delete file from disk
         try:
             self.storage_manager.delete_file(file_record.file_path)
-        except (FileNotFoundError, PermissionError) as e:
+        except (FileNotFoundError, PermissionError):
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to delete file",
+                detail="Failed to delete file",
             )
 
         crud.delete_file(session=self.db, file_id=file_id)
 
-    def _get_file_record(self, file_id: uuid.UUID, user_id: uuid.UUID) -> File:
-        """Helper method to get file record and verify ownership."""
+    def get_file_record(self, file_id: uuid.UUID, user_id: uuid.UUID) -> File:
         file_record = crud.get_file(session=self.db, file_id=file_id)
 
         if not file_record:

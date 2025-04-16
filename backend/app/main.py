@@ -5,6 +5,9 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.utils import import_file_handlers
+
+import_file_handlers()
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:

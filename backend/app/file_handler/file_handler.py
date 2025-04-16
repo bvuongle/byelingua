@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from app.storage_manager.storage_manager import StorageManager
+
 from app.models import File
+from app.storage_manager.storage_manager import StorageManager
 
 
 class FileHandler(ABC):
@@ -22,4 +23,8 @@ class FileHandler(ABC):
 
     @abstractmethod
     def get_row_count(self) -> int:
+        pass
+
+    @abstractmethod
+    def validate_file(self) -> bool:
         pass

@@ -1,7 +1,5 @@
-import typing
-import uuid
-from tempfile import TemporaryFile, TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
