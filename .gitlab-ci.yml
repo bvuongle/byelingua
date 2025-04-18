@@ -1,8 +1,13 @@
 test:
   stage: test
-  coverage: '/TOTAL.*\s+(\d+%)$/'
   script:
     - sh ./scripts/test-gitlab-ci.sh
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/coverage.xml
   tags:
     - test
 
