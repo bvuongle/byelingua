@@ -2,30 +2,18 @@ import sys
 
 from transformers import MarianMTModel, MarianTokenizer
 
-from app.models import Language
-
-
-def singleton(cls):
-    instances = {}
-
-    def wrapper(*args, **kwargs):
-        if cls not in instances:
-            instances[cls] = cls(*args, **kwargs)
-        return instances[cls]
-
-    return wrapper
+from app.utils import logger
+from translation.languages import Language
+from translation.pairs import SUPPORTED_PAIRS
+from translation.singleton import singleton
 
 
 @singleton
 class Translator:
-    def __init__(self) -> None:
-        print("Initializing translator", file=sys.stderr)
+    def __init__(self, supported_pairs: dict[tuple[Language, Language], str]) -> None:
+        logger.info("Initializing translator")
 
-        self.supported_pairs = {
-            (Language.PL, Language.EN): "Helsinki-NLP/opus-mt-pl-en",
-            (Language.EN, Language.DE): "Helsinki-NLP/opus-mt-en-de"
-            # TODO more pairs in future
-        }
+        self.supported_pairs = supported_pairs
 
         self.models = {}
         self.tokenizers = {}
@@ -33,10 +21,12 @@ class Translator:
         for src_lang, tgt_lang in self.supported_pairs.keys():
             self._load_model(src_lang, tgt_lang)
 
+        logger.info("All models loaded")
+
     def _load_model(self, src_lang: Language, tgt_lang: Language) -> None:
         # models are downloaded to ~/.cache/huggingface
 
-        print(f"Loading model {src_lang.name}->{tgt_lang.name}", file=sys.stderr)
+        logger.info(f"Loading model {src_lang.name}->{tgt_lang.name}")
 
         pair = (src_lang, tgt_lang)
 
@@ -96,21 +86,4 @@ class Translator:
         ]
 
 
-if __name__ == "__main__":
-    # to run it this file (from "backend/" dir):
-    # $ python -m app.translation
-
-    translator = Translator()
-
-    # direct translations
-    print(translator.translate(Language.EN, Language.DE, "Hello"))
-    print(translator.translate(Language.PL, Language.EN, "Cześć"))
-    print(translator.translate_batch(Language.PL, Language.EN, ["Jabłko", "Gruszka", "Malina"]))
-
-    # chain translations
-    print(translator._translate_chain([Language.PL, Language.EN, Language.DE], "Cześć"))
-    print(translator.translate(Language.PL, Language.DE, "Cześć"))
-
-    # singleton
-    translator2 = Translator()
-    print(translator2 is translator)  # True
+translator = Translator(SUPPORTED_PAIRS)
