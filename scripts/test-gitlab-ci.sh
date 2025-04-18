@@ -15,3 +15,7 @@ docker compose -f docker-stack.yml down -v --remove-orphans # Remove possibly pr
 docker compose -f docker-stack.yml up -d
 docker compose -f docker-stack.yml exec -T backend bash scripts/tests-start.sh "$@"
 docker compose -f docker-stack.yml down -v --remove-orphans
+
+pwd
+ls
+ls backend
