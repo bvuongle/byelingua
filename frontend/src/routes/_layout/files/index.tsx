@@ -58,23 +58,26 @@ function FilesTable() {
     deleteFileMutation.mutate(fileId);
   };
 
-  // const handleDownload = async (fileId: string, filename: string) => {
-  //     try {
-  //         const response = await FilesService.downloadFile({ fileId });
-  //         const blob = new Blob([response], { type: "application/octet-stream" });
-  //         const url = window.URL.createObjectURL(blob);
-  //         const link = document.createElement("a");
-  //         link.href = url;
-  //         link.download = filename;
-  //         document.body.appendChild(link);
-  //         link.click();
-  //         document.body.removeChild(link);
-  //         window.URL.revokeObjectURL(url);
-  //     } catch (error) {
-  //         toast.showErrorToast("Download failed");
-  //     }
-  // };
+  const handleDownload = async (fileId: string, filename: string) => {
+    try {
+      const response = await FilesService.downloadFile({ fileId });
 
+      // Check if response is a Blob or something compatible
+      const blob = new Blob([response as any]); // Adjust `as any` if you have a more specific type
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download file:", error);
+    }
+  }
 
   return (
     <Table.Root>
@@ -105,7 +108,7 @@ function FilesTable() {
                 size="xs"
                 colorScheme="blue"
                 m="1"
-                // onClick={() => handleDownload(file.id, file.filename)}
+                onClick={() => handleDownload(file.id, file.filename)}
               >
                 Download
               </Button>
@@ -203,4 +206,3 @@ function FilesPage() {
     </Container>
   )
 }
-
