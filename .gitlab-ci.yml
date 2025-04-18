@@ -8,7 +8,6 @@ test:
       coverage_report:
         coverage_format: cobertura
         path: backend/coverage-reports/coverage.xml
-        coverage_path_prefix: backend/
   tags:
     - test
 
