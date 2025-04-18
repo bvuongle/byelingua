@@ -7,7 +7,7 @@ test:
     reports:
       coverage_report:
         coverage_format: cobertura
-        path: backend/coverage.xml
+        path: backend/coverage-reports/coverage.xml
   tags:
     - test
 
