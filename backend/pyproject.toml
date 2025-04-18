@@ -24,6 +24,9 @@ dependencies = [
     "aiofiles>=24.1.0",
     "pytest-asyncio>=0.23.8",
     "openpyxl>=3.1.5",
+    "torch>=2.6.0",
+    "transformers>=4.51.3",
+    "sentencepiece>=0.2.0",
 ]
 
 [tool.uv]
@@ -35,6 +38,19 @@ dev-dependencies = [
     "types-passlib<2.0.0.0,>=1.7.7.20240106",
     "coverage<8.0.0,>=7.4.3",
     "black>=25.1.0",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+torchvision = [
+  { index = "pytorch-cpu" },
 ]
 
 [build-system]
