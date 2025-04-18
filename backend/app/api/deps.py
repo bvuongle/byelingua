@@ -13,7 +13,9 @@ from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.models import TokenPayload, User
-from app.translation import Translator
+from app.translation.pairs import SUPPORTED_PAIRS
+from app.translation.translator import Translator
+
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -72,7 +74,7 @@ FileServiceDep = Annotated[
 
 
 def get_translator() -> Translator:
-    return Translator()
+    return Translator(SUPPORTED_PAIRS)
 
 
 TranslatorDep = Annotated[

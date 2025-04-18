@@ -10,6 +10,8 @@ from sqlalchemy import Dialect
 from sqlalchemy.sql.type_api import _T
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
+from app.translation.languages import Language
+
 
 # Shared properties
 class UserBase(SQLModel):
@@ -82,17 +84,6 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
-
-
-class Language(Enum):
-    EN = "en"
-    PL = "pl"
-    DE = "de"
-
-
-class LanguagePair(Enum):
-    PL_EN = (Language.PL, Language.EN)
-    EN_DE = (Language.EN, Language.DE)
 
 
 class FileFormat(str, Enum):
