@@ -84,6 +84,17 @@ class NewPassword(SQLModel):
     new_password: str = Field(min_length=8, max_length=40)
 
 
+class Language(Enum):
+    EN = "en"
+    PL = "pl"
+    DE = "de"
+
+
+class LanguagePair(Enum):
+    PL_EN = (Language.PL, Language.EN)
+    EN_DE = (Language.EN, Language.DE)
+
+
 class FileFormat(str, Enum):
     csv = "csv"
     xlsx = "xlsx"
@@ -111,11 +122,13 @@ class PathType(types.TypeDecorator):
 class FileBase(SQLModel):
     filename: str = Field(max_length=255)
     format: FileFormat = Field(default=FileFormat.csv)
-    rows_completed: int = Field(default=0)
+    rows_completed: int = Field(default=1)
     selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
     file_path: Path = Field(sa_column=Column(PathType))
+    source_language: Language = Field(default=Language.PL)
+    target_language: Language = Field(default=Language.EN)
 
 
 class File(FileBase, table=True):
@@ -131,15 +144,11 @@ class FilePublic(FileBase):
     id: uuid.UUID
 
 
-class Language(Enum):
-    EN = "en"
-    PL = "pl"
-    DE = "de"
-
-
-class LanguagePair(Enum):
-    PL_EN = (Language.PL, Language.EN)
-    EN_DE = (Language.EN, Language.DE)
+class FileUpdate(SQLModel):
+    source_language: Language | None = Field(default=None)
+    target_language: Language | None = Field(default=None)
+    filename: str | None = Field(default=None, max_length=255)
+    selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
 
 
 class ColumnTranslation(SQLModel):

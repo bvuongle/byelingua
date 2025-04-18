@@ -93,6 +93,9 @@ class FileService:
                     detail="File validation failed",
                 )
 
+            headers = file_handler.read_headers()
+            db_file.selected_columns = list(range(len(headers)))
+
             return crud.create_file(session=self.db, file_in=db_file, owner_id=user.id)
         except HTTPException as e:
             raise e

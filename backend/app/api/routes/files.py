@@ -1,13 +1,15 @@
 import uuid
+from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile
 from fastapi.responses import Response
 
-from app.api.deps import CurrentUser, FileServiceDep
+from app.api.deps import CurrentUser, FileServiceDep, SessionDep, TranslatorDep
+from app.crud import update_file as crud_update_file
 from app.file_handler.file_handler import FileHandler
 from app.file_handler.file_handler_factory import FileHandlerFactory
-from app.models import ColumnTranslation, FilePublic, FileRow, Message
+from app.models import ColumnTranslation, FilePublic, FileRow, FileUpdate, Message
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -68,6 +70,7 @@ def get_file_row(
     row_index: int,
     current_user: CurrentUser,
     file_service: FileServiceDep,
+    translator: TranslatorDep,
 ) -> Any:
     file_record = file_service.get_file_record(file_id, current_user.id)
     file_handler: FileHandler = FileHandlerFactory.create_handler(
@@ -76,11 +79,19 @@ def get_file_row(
     headers = file_handler.read_headers()
     content = file_handler.read_row(row_index)
 
+    translation = translator.translate_batch(
+        src_lang=file_record.source_language,
+        tgt_lang=file_record.target_language,
+        texts=content,
+    )
+
     elements = [
         ColumnTranslation(
-            column_name=column_name, original=original, translation=original
+            column_name=column_name, original=original, translation=translated
         )
-        for column_name, original in zip(headers, content, strict=False)
+        for column_name, original, translated in zip(
+            headers, content, translation, strict=False
+        )
     ]
 
     response = FileRow(row_index=row_index, columns=elements)
@@ -95,6 +106,7 @@ def update_file_row(
     payload: FileRow,
     current_user: CurrentUser,
     file_service: FileServiceDep,
+    session: SessionDep,
 ) -> Any:
     file_record = file_service.get_file_record(file_id, current_user.id)
     file_handler: FileHandler = FileHandlerFactory.create_handler(
@@ -115,4 +127,59 @@ def update_file_row(
     ]
 
     response = FileRow(row_index=row_index, columns=elements)
+
+    file_record.rows_completed = max(file_record.rows_completed, row_index + 1)
+    file_record.last_modified = datetime.now()
+    session.add(file_record)
+    session.commit()
+
     return response
+
+
+@router.get("/{file_id}/headers", response_model=list[str])
+def get_file_headers(
+    *,
+    file_id: uuid.UUID,
+    current_user: CurrentUser,
+    file_service: FileServiceDep,
+) -> Any:
+    file_record = file_service.get_file_record(file_id, current_user.id)
+    file_handler: FileHandler = FileHandlerFactory.create_handler(
+        file_service.storage_manager, file_record
+    )
+    headers = file_handler.read_headers()
+    return headers
+
+
+@router.patch("/{file_id}/", response_model=FilePublic)
+def update_file(
+    *,
+    file_id: uuid.UUID,
+    payload: FileUpdate,
+    current_user: CurrentUser,
+    file_service: FileServiceDep,
+    translator: TranslatorDep,
+) -> Any:
+    file_record = file_service.get_file_record(file_id, current_user.id)
+    file_handler: FileHandler = FileHandlerFactory.create_handler(
+        file_service.storage_manager, file_record
+    )
+
+    headers = file_handler.read_headers()
+    if payload.selected_columns:
+        if any(col >= len(headers) or col < 0 for col in payload.selected_columns):
+            raise HTTPException(
+                status_code=400,
+                detail="Selected columns exceed the number of headers or is negative",
+            )
+
+    language_pair = (payload.source_language, payload.target_language)
+    if language_pair not in translator.supported_pairs:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported language pair",
+        )
+
+    crud_update_file(session=file_service.db, db_file=file_record, file_in=payload)
+
+    return file_record

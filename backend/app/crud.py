@@ -4,7 +4,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import File, FileBase, User, UserCreate, UserUpdate
+from app.models import File, FileBase, FileUpdate, User, UserCreate, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -65,3 +65,13 @@ def get_file(*, session: Session, file_id: uuid.UUID) -> File | None:
     statement = select(File).where(File.id == file_id)
     db_item = session.exec(statement).first()  # type: ignore
     return db_item
+
+
+def update_file(*, session: Session, db_file: File, file_in: FileUpdate) -> File:
+    file_data = file_in.model_dump(exclude_unset=True)
+
+    db_file.sqlmodel_update(file_data)
+    session.add(db_file)
+    session.commit()
+    session.refresh(db_file)
+    return db_file
