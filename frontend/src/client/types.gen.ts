@@ -13,7 +13,13 @@ export type Body_login_login_access_token = {
   client_secret?: string | null
 }
 
-export type FileFormat = "csv"
+export type ColumnTranslation = {
+  column_name: string
+  original: string
+  translation: string | null
+}
+
+export type FileFormat = "csv" | "xlsx"
 
 export type FilePublic = {
   filename: string
@@ -23,34 +29,28 @@ export type FilePublic = {
   created_at?: string
   last_modified?: string
   file_path: string
+  source_language?: Language
+  target_language?: Language
   id: string
+}
+
+export type FileRow = {
+  row_index: number | null
+  columns: Array<ColumnTranslation>
+}
+
+export type FileUpdate = {
+  source_language?: Language | null
+  target_language?: Language | null
+  filename?: string | null
+  selected_columns?: Array<number>
 }
 
 export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
-export type ItemCreate = {
-  title: string
-  description?: string | null
-}
-
-export type ItemPublic = {
-  title: string
-  description?: string | null
-  id: string
-  owner_id: string
-}
-
-export type ItemsPublic = {
-  data: Array<ItemPublic>
-  count: number
-}
-
-export type ItemUpdate = {
-  title?: string | null
-  description?: string | null
-}
+export type Language = "en" | "pl" | "de"
 
 export type Message = {
   message: string
@@ -144,37 +144,33 @@ export type FilesDeleteFileData = {
 
 export type FilesDeleteFileResponse = Message
 
-export type ItemsReadItemsData = {
-  limit?: number
-  skip?: number
+export type FilesGetFileRowData = {
+  fileId: string
+  rowIndex: number
 }
 
-export type ItemsReadItemsResponse = ItemsPublic
+export type FilesGetFileRowResponse = FileRow
 
-export type ItemsCreateItemData = {
-  requestBody: ItemCreate
+export type FilesUpdateFileRowData = {
+  fileId: string
+  requestBody: FileRow
+  rowIndex: number
 }
 
-export type ItemsCreateItemResponse = ItemPublic
+export type FilesUpdateFileRowResponse = FileRow
 
-export type ItemsReadItemData = {
-  id: string
+export type FilesGetFileHeadersData = {
+  fileId: string
 }
 
-export type ItemsReadItemResponse = ItemPublic
+export type FilesGetFileHeadersResponse = Array<string>
 
-export type ItemsUpdateItemData = {
-  id: string
-  requestBody: ItemUpdate
+export type FilesUpdateFileData = {
+  fileId: string
+  requestBody: FileUpdate
 }
 
-export type ItemsUpdateItemResponse = ItemPublic
-
-export type ItemsDeleteItemData = {
-  id: string
-}
-
-export type ItemsDeleteItemResponse = Message
+export type FilesUpdateFileResponse = FilePublic
 
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token
@@ -269,3 +265,5 @@ export type UtilsTestEmailData = {
 export type UtilsTestEmailResponse = Message
 
 export type UtilsHealthCheckResponse = boolean
+
+export type UtilsAvailableLanguagesResponse = Array<string>
