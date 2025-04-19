@@ -21,9 +21,9 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FilesService, Language, UtilsService } from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
-import { getLanguageName } from '@/utils/language.ts'
+import { FilesService, Language, UtilsService } from "../../../../client";
+import useCustomToast from "../../../../hooks/useCustomToast";
+import { getLanguageName } from '../../../../utils/language.ts'
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
 
@@ -48,7 +48,7 @@ function parseRangeString(rangeStr: string, max: number): Set<number> {
   return result;
 }
 
-export const Route = createFileRoute("/_layout/files/$fileId")({ component: FilePreviewPage });
+export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
 
 function FilePreviewPage() {
   const { fileId } = Route.useParams();
@@ -103,9 +103,25 @@ function FilePreviewPage() {
       });
     },
     onSuccess: () => {
-      toast.showSuccessToast("Translation started");
+      toast.showSuccessToast("Translation session initialized");
       queryClient.invalidateQueries({ queryKey: ["files"] });
-      navigate({ to: "/files" });
+
+      // compute actual row indices and navigate to the first one
+      const maxRows = fileContent.length - 1;
+      const includeSet = parseRangeString(includeRows, maxRows);
+      const excludeSet = excludeRows.trim()
+        ? parseRangeString(excludeRows, maxRows)
+        : new Set<number>();
+      const rowList = Array.from(includeSet)
+        .filter((i) => !excludeSet.has(i))
+        .sort((a, b) => a - b);
+      if (rowList.length > 0) {
+        navigate({
+          to: `/files/${fileId}/translate/${rowList[0]}`,
+        });
+      } else {
+        toast.showErrorToast("No rows selected to translate");
+      }
     },
     onError: () => toast.showErrorToast("Failed to start translation"),
   });
