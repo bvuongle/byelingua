@@ -20,7 +20,8 @@ import { Route as LayoutIndexImport } from './routes/_layout/index'
 import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 import { Route as LayoutFilesIndexImport } from './routes/_layout/files/index'
-import { Route as LayoutFilesFileIdImport } from './routes/_layout/files/$fileId'
+import { Route as LayoutFilesFileIdIndexImport } from './routes/_layout/files/$fileId/index'
+import { Route as LayoutFilesFileIdTranslateRowIndexImport } from './routes/_layout/files/$fileId/translate/$rowIndex'
 
 // Create/Update Routes
 
@@ -69,10 +70,16 @@ const LayoutFilesIndexRoute = LayoutFilesIndexImport.update({
   getParentRoute: () => LayoutRoute,
 } as any)
 
-const LayoutFilesFileIdRoute = LayoutFilesFileIdImport.update({
-  path: '/files/$fileId',
+const LayoutFilesFileIdIndexRoute = LayoutFilesFileIdIndexImport.update({
+  path: '/files/$fileId/',
   getParentRoute: () => LayoutRoute,
 } as any)
+
+const LayoutFilesFileIdTranslateRowIndexRoute =
+  LayoutFilesFileIdTranslateRowIndexImport.update({
+    path: '/files/$fileId/translate/$rowIndex',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -110,12 +117,16 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexImport
       parentRoute: typeof LayoutImport
     }
-    '/_layout/files/$fileId': {
-      preLoaderRoute: typeof LayoutFilesFileIdImport
-      parentRoute: typeof LayoutImport
-    }
     '/_layout/files/': {
       preLoaderRoute: typeof LayoutFilesIndexImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/files/$fileId/': {
+      preLoaderRoute: typeof LayoutFilesFileIdIndexImport
+      parentRoute: typeof LayoutImport
+    }
+    '/_layout/files/$fileId/translate/$rowIndex': {
+      preLoaderRoute: typeof LayoutFilesFileIdTranslateRowIndexImport
       parentRoute: typeof LayoutImport
     }
   }
@@ -128,8 +139,9 @@ export const routeTree = rootRoute.addChildren([
     LayoutAdminRoute,
     LayoutSettingsRoute,
     LayoutIndexRoute,
-    LayoutFilesFileIdRoute,
     LayoutFilesIndexRoute,
+    LayoutFilesFileIdIndexRoute,
+    LayoutFilesFileIdTranslateRowIndexRoute,
   ]),
   LoginRoute,
   RecoverPasswordRoute,

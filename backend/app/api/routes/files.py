@@ -77,6 +77,7 @@ def get_file_row(
         file_service.storage_manager, file_record
     )
     headers = file_handler.read_headers()
+    selected_headers = [header for idx, header in enumerate(headers) if idx in file_record.selected_columns]
     content = file_handler.read_row(row_index)
 
     translation = translator.translate_batch(
@@ -90,7 +91,7 @@ def get_file_row(
             column_name=column_name, original=original, translation=translated
         )
         for column_name, original, translated in zip(
-            headers, content, translation, strict=False
+            selected_headers, content, translation, strict=False
         )
     ]
 
@@ -117,13 +118,14 @@ def update_file_row(
     file_handler.write_row(row_index, elements)
 
     headers = file_handler.read_headers()
+    selected_headers = [header for idx, header in enumerate(headers) if idx in file_record.selected_columns]
     content = file_handler.read_row(row_index)
 
     elements = [
         ColumnTranslation(
             column_name=column_name, original=original, translation=original
         )
-        for column_name, original in zip(headers, content, strict=False)
+        for column_name, original in zip(selected_headers, content, strict=False)
     ]
 
     response = FileRow(row_index=row_index, columns=elements)

@@ -11,16 +11,14 @@ import type {
   FilesDownloadFileResponse,
   FilesDeleteFileData,
   FilesDeleteFileResponse,
-  ItemsReadItemsData,
-  ItemsReadItemsResponse,
-  ItemsCreateItemData,
-  ItemsCreateItemResponse,
-  ItemsReadItemData,
-  ItemsReadItemResponse,
-  ItemsUpdateItemData,
-  ItemsUpdateItemResponse,
-  ItemsDeleteItemData,
-  ItemsDeleteItemResponse,
+  FilesGetFileRowData,
+  FilesGetFileRowResponse,
+  FilesUpdateFileRowData,
+  FilesUpdateFileRowResponse,
+  FilesGetFileHeadersData,
+  FilesGetFileHeadersResponse,
+  FilesUpdateFileData,
+  FilesUpdateFileResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -53,6 +51,7 @@ import type {
   UtilsTestEmailData,
   UtilsTestEmailResponse,
   UtilsHealthCheckResponse,
+  UtilsAvailableLanguagesResponse,
 } from "./types.gen"
 
 export class FilesService {
@@ -136,27 +135,24 @@ export class FilesService {
       },
     })
   }
-}
 
-export class ItemsService {
   /**
-   * Read Items
-   * Retrieve items.
+   * Get File Row
    * @param data The data for the request.
-   * @param data.skip
-   * @param data.limit
-   * @returns ItemsPublic Successful Response
+   * @param data.fileId
+   * @param data.rowIndex
+   * @returns FileRow Successful Response
    * @throws ApiError
    */
-  public static readItems(
-    data: ItemsReadItemsData = {},
-  ): CancelablePromise<ItemsReadItemsResponse> {
+  public static getFileRow(
+    data: FilesGetFileRowData,
+  ): CancelablePromise<FilesGetFileRowResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/v1/items/",
-      query: {
-        skip: data.skip,
-        limit: data.limit,
+      url: "/api/v1/files/{file_id}/row/{row_index}",
+      path: {
+        file_id: data.fileId,
+        row_index: data.rowIndex,
       },
       errors: {
         422: "Validation Error",
@@ -165,19 +161,24 @@ export class ItemsService {
   }
 
   /**
-   * Create Item
-   * Create new item.
+   * Update File Row
    * @param data The data for the request.
+   * @param data.fileId
+   * @param data.rowIndex
    * @param data.requestBody
-   * @returns ItemPublic Successful Response
+   * @returns FileRow Successful Response
    * @throws ApiError
    */
-  public static createItem(
-    data: ItemsCreateItemData,
-  ): CancelablePromise<ItemsCreateItemResponse> {
+  public static updateFileRow(
+    data: FilesUpdateFileRowData,
+  ): CancelablePromise<FilesUpdateFileRowResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/api/v1/items/",
+      url: "/api/v1/files/{file_id}/row/{row_index}",
+      path: {
+        file_id: data.fileId,
+        row_index: data.rowIndex,
+      },
       body: data.requestBody,
       mediaType: "application/json",
       errors: {
@@ -187,21 +188,20 @@ export class ItemsService {
   }
 
   /**
-   * Read Item
-   * Get item by ID.
+   * Get File Headers
    * @param data The data for the request.
-   * @param data.id
-   * @returns ItemPublic Successful Response
+   * @param data.fileId
+   * @returns string Successful Response
    * @throws ApiError
    */
-  public static readItem(
-    data: ItemsReadItemData,
-  ): CancelablePromise<ItemsReadItemResponse> {
+  public static getFileHeaders(
+    data: FilesGetFileHeadersData,
+  ): CancelablePromise<FilesGetFileHeadersResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/v1/items/{id}",
+      url: "/api/v1/files/{file_id}/headers",
       path: {
-        id: data.id,
+        file_id: data.fileId,
       },
       errors: {
         422: "Validation Error",
@@ -210,48 +210,24 @@ export class ItemsService {
   }
 
   /**
-   * Update Item
-   * Update an item.
+   * Update File
    * @param data The data for the request.
-   * @param data.id
+   * @param data.fileId
    * @param data.requestBody
-   * @returns ItemPublic Successful Response
+   * @returns FilePublic Successful Response
    * @throws ApiError
    */
-  public static updateItem(
-    data: ItemsUpdateItemData,
-  ): CancelablePromise<ItemsUpdateItemResponse> {
+  public static updateFile(
+    data: FilesUpdateFileData,
+  ): CancelablePromise<FilesUpdateFileResponse> {
     return __request(OpenAPI, {
-      method: "PUT",
-      url: "/api/v1/items/{id}",
+      method: "PATCH",
+      url: "/api/v1/files/{file_id}/",
       path: {
-        id: data.id,
+        file_id: data.fileId,
       },
       body: data.requestBody,
       mediaType: "application/json",
-      errors: {
-        422: "Validation Error",
-      },
-    })
-  }
-
-  /**
-   * Delete Item
-   * Delete an item.
-   * @param data The data for the request.
-   * @param data.id
-   * @returns Message Successful Response
-   * @throws ApiError
-   */
-  public static deleteItem(
-    data: ItemsDeleteItemData,
-  ): CancelablePromise<ItemsDeleteItemResponse> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/api/v1/items/{id}",
-      path: {
-        id: data.id,
-      },
       errors: {
         422: "Validation Error",
       },
@@ -634,6 +610,19 @@ export class UtilsService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/api/v1/utils/health-check/",
+    })
+  }
+
+  /**
+   * Available Languages
+   * Get available languages for translation.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static availableLanguages(): CancelablePromise<UtilsAvailableLanguagesResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/utils/available-languages/",
     })
   }
 }
