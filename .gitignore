@@ -6,3 +6,4 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /backend/storage
+.DS_Store
