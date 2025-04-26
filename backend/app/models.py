@@ -114,6 +114,8 @@ class FileBase(SQLModel):
     filename: str = Field(max_length=255)
     format: FileFormat = Field(default=FileFormat.csv)
     rows_completed: int = Field(default=1)
+    total_rows: int = Field(default=1)
+    headers: list[str] = Field(sa_column=Column(JSON), default=[])
     selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
@@ -151,3 +153,8 @@ class ColumnTranslation(SQLModel):
 class FileRow(SQLModel):
     row_index: int | None
     columns: list[ColumnTranslation]
+
+
+class FilePreview(SQLModel):
+    headers: list[str]
+    rows: list[list[str]]

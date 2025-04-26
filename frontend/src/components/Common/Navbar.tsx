@@ -23,7 +23,7 @@ function Navbar() {
       <Link to="/">
         <Flex align="center" gap={2}>
           <Image src={Logo} alt="Logo" maxW="3rem" />
-          <Text fontWeight="bold" fontSize="lg" color="initial">
+          <Text fontWeight="bold" fontSize="lg" color="fg">
             ByeLingua
           </Text>
         </Flex>

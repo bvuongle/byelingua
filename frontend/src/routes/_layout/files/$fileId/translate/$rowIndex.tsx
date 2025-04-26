@@ -122,8 +122,8 @@ function TranslateRowPage() {
         <Heading size="md">
           Row {pos + 1} of {selectedRows.length}
         </Heading>
-        <Text fontSize="sm" color="gray.600">
-          (CSV row #{actualIndex})
+        <Text fontSize="sm" color="fg">
+          row #{actualIndex}
         </Text>
       </Flex>
 
@@ -163,7 +163,7 @@ function TranslateRowPage() {
         </Table>
       </TableContainer>
 
-      <Flex gap={4}>
+      <Flex gap={4} justify={"center"}>
         <Button
           onClick={() =>
             navigate({
@@ -180,6 +180,18 @@ function TranslateRowPage() {
           disabled={!hasUnsavedChanges || saveMutation.isPending}
         >
           {saveMutation.isPending ? "Saving…" : "Apply Changes"}
+        </Button>
+        <Button
+            onClick={
+            async () => {
+                await saveMutation.mutateAsync();
+                navigate({
+                    to: `/files/${fileId}/translate/${selectedRows[pos + 1]}`,
+                });
+            }}
+            disabled={!hasNext || saveMutation.isPending}
+        >
+            Apply and Next Row
         </Button>
         <Button
           onClick={() =>

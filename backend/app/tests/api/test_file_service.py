@@ -34,7 +34,7 @@ def file_service(db: Session, mock_storage_manager):
 
 @pytest.fixture
 def mock_upload_file():
-    content = b"test file content"
+    content = b"test file content\nline 2\nline 3"
     file = BytesIO(content)
     upload_file = UploadFile(filename="test.csv", file=file)
     yield upload_file

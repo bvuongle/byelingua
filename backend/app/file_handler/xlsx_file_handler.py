@@ -76,6 +76,17 @@ class XLSXFileHandler(FileHandler):
             sheet = wb.active
             return sheet.max_row - 1  # excluding header
 
+    def get_preview(self, row_count: int) -> list[list[str]]:
+        with self.storage_manager.open_file(self.file.file_path, "rb") as file:
+            wb = openpyxl.load_workbook(file, read_only=True)
+            sheet = wb.active
+            preview = []
+            for idx, row in enumerate(sheet.iter_rows(min_row=2), start=1):
+                if idx > row_count:
+                    break
+                preview.append([cell.value for cell in row])
+            return preview
+
     def validate_file(self) -> bool:
         with self.storage_manager.open_file(self.file.file_path, "rb") as file:
             try:

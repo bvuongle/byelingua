@@ -21,13 +21,15 @@ import {
   ListItemText,
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Papa from "papaparse";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FilesService, Language, UtilsService } from "@/client";
+import { FilesService, Language, UtilsService, FilesGetFilePreviewResponse } from "@/client";
 import useCustomToast from "../../../../hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
+const getFilePreview = async (fileId: string) => {
+  return FilesService.getFilePreview({fileId})
+}
 
 function parseRangeString(rangeStr: string, max: number): Set<number> {
   const result = new Set<number>();
@@ -79,19 +81,14 @@ export default function FilePreviewPage() {
   });
   const fileMeta = files.find((f) => f.id === fileId);
 
-  // download & parse CSV
+  // Download preview
   const {
-    data: fileContent = [],
+    data: filePreview,
     isLoading: previewLoading,
     isError: previewError,
-  } = useQuery<string[][]>({
-    queryKey: ["file-csv", fileId],
-    enabled: !!fileId,
-    queryFn: async () => {
-      const resp = await FilesService.downloadFile({ fileId });
-      const text = await new Blob([resp as any]).text();
-      return Papa.parse<string[]>(text, { skipEmptyLines: true }).data;
-    },
+  } = useQuery<FilesGetFilePreviewResponse>({
+    queryKey: ["file-preview", fileId],
+    queryFn: async () => getFilePreview(fileId),
   });
 
   // form state
@@ -108,10 +105,10 @@ export default function FilePreviewPage() {
   const [excludeRows, setExcludeRows] = useState<string>("");
 
   useEffect(() => {
-    if (fileContent[0] && selectedColumns.length === 0) {
-      setSelectedColumns(fileContent[0].map((_, i) => i));
+    if (filePreview?.headers && selectedColumns.length === 0) {
+      setSelectedColumns(filePreview?.headers.map((_, i) => i));
     }
-  }, [fileContent]);
+  }, [filePreview?.headers]);
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -119,7 +116,7 @@ export default function FilePreviewPage() {
       const cols =
         selectedColumns.length > 0
           ? selectedColumns
-          : fileContent[0].map((_, i) => i);
+          : filePreview?.headers.map((_, i) => i);
       return FilesService.updateFile({
         fileId,
         requestBody: {
@@ -135,7 +132,7 @@ export default function FilePreviewPage() {
       queryClient.invalidateQueries({ queryKey: ["files"] });
 
       // compute and store selected rows in React‑Query cache
-      const maxRows = fileContent.length - 1;
+      const maxRows = fileMeta?.total_rows || 0;
       const includeSet = parseRangeString(includeRows, maxRows);
       const excludeSet = excludeRows.trim()
         ? parseRangeString(excludeRows, maxRows)
@@ -170,7 +167,7 @@ export default function FilePreviewPage() {
       </Container>
     );
 
-  const maxRows = fileContent.length - 1;
+  const maxRows = fileMeta?.total_rows || 0;
   const includeSet = parseRangeString(includeRows, maxRows);
   const excludeSet = excludeRows.trim()
     ? parseRangeString(excludeRows, maxRows)
@@ -193,14 +190,14 @@ export default function FilePreviewPage() {
         </Flex>
       </Flex>
 
-      <Box bg="yellow.50" p={4} borderRadius="md" mb={6}>
-        <Text fontSize="sm" color="gray.700">
+      <Box bg="bg.emphasized" p={4} borderRadius="md" mb={6}>
+        <Text fontSize="sm" color="fg.muted">
           • Leave source blank for auto‑detect.
         </Text>
-        <Text fontSize="sm" color="gray.700" mt={1}>
+        <Text fontSize="sm" color="fg.muted" mt={1}>
           • Target language is required.
         </Text>
-        <Text fontSize="sm" color="gray.700" mt={1}>
+        <Text fontSize="sm" color="fg.muted" mt={1}>
           • All columns/rows are selected by default.
         </Text>
       </Box>
@@ -260,18 +257,18 @@ export default function FilePreviewPage() {
               }
               renderValue={(sel) =>
                 (sel as number[])
-                  .map((i) => fileContent[0][i])
+                  .map((i) => filePreview?.headers[i])
                   .join(", ")
               }
               label="Select Columns"
             >
               <MenuItem value={-1}>
                 <Checkbox
-                  checked={selectedColumns.length === fileContent[0].length}
+                  checked={selectedColumns.length === filePreview?.headers.length}
                 />
                 <ListItemText primary="Select All" />
               </MenuItem>
-              {fileContent[0].map((col, idx) => (
+              {filePreview?.headers.map((col, idx) => (
                 <MenuItem key={idx} value={idx}>
                   <Checkbox checked={selectedColumns.includes(idx)} />
                   <ListItemText primary={col} />
@@ -315,13 +312,13 @@ export default function FilePreviewPage() {
         <Table.Root interactive stickyHeader>
           <Table.Header>
             <Table.Row bg="bg.subtle">
-              {fileContent[0].map((col, i) => (
+              {filePreview?.headers.map((col, i) => (
                 <Table.ColumnHeader key={i}>{col}</Table.ColumnHeader>
               ))}
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {fileContent.slice(1).map((row, r) => (
+            {filePreview?.rows.map((row, r) => (
               <Table.Row key={r}>
                 {row.map((cell, c) => (
                   <Table.Cell key={c}>{cell}</Table.Cell>

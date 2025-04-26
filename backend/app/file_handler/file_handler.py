@@ -28,3 +28,7 @@ class FileHandler(ABC):
     @abstractmethod
     def validate_file(self) -> bool:
         pass
+
+    @abstractmethod
+    def get_preview(self, row_count: int) -> list[list[str]]:
+        pass

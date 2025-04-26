@@ -21,10 +21,17 @@ export type ColumnTranslation = {
 
 export type FileFormat = "csv" | "xlsx"
 
+export type FilePreview = {
+  headers: Array<string>
+  rows: Array<Array<string>>
+}
+
 export type FilePublic = {
   filename: string
   format?: FileFormat
   rows_completed?: number
+  total_rows?: number
+  headers?: Array<string>
   selected_columns?: Array<number>
   created_at?: string
   last_modified?: string
@@ -171,6 +178,12 @@ export type FilesUpdateFileData = {
 }
 
 export type FilesUpdateFileResponse = FilePublic
+
+export type FilesGetFilePreviewData = {
+  fileId: string
+}
+
+export type FilesGetFilePreviewResponse = FilePreview
 
 export type LoginLoginAccessTokenData = {
   formData: Body_login_login_access_token
