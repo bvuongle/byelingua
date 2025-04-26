@@ -39,13 +39,13 @@ class FileService:
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail=f"File format '{file_ext}' not supported. Allowed formats: {[f.value for f in settings.UPLOAD_ALLOWED_FORMATS]}",
+                detail=f"File format '{file_ext}' not supported. Allowed formats: {settings.UPLOAD_ALLOWED_FORMATS}",
             )
 
         if file_format not in settings.UPLOAD_ALLOWED_FORMATS:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail=f"File format '{file_format}' not allowed. Allowed formats: {[f.value for f in settings.UPLOAD_ALLOWED_FORMATS]}",
+                detail=f"File format '{file_format}' not allowed. Allowed formats: {settings.UPLOAD_ALLOWED_FORMATS}",
             )
 
         return file_format
@@ -95,6 +95,8 @@ class FileService:
 
             headers = file_handler.read_headers()
             db_file.selected_columns = list(range(len(headers)))
+            db_file.headers = headers
+            db_file.total_rows = file_handler.get_row_count()
 
             return crud.create_file(session=self.db, file_in=db_file, owner_id=user.id)
         except HTTPException as e:

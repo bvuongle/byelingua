@@ -63,6 +63,18 @@ class CSVFileHandler(FileHandler):
                 return 0
             return sum(1 for _ in reader)
 
+    def get_preview(self, row_count: int) -> list[list[str]]:
+        with self.storage_manager.open_file(self.file.file_path, "r") as file:
+            reader = csv.reader(file)
+            next(reader)  # Skip header
+            preview = []
+            for idx, row in enumerate(reader):
+                if idx < row_count:
+                    preview.append([row[i] for i in self.file.selected_columns])
+                else:
+                    break
+        return preview
+
     def validate_file(self) -> bool:
         with self.storage_manager.open_file(self.file.file_path, "r") as file:
             try:

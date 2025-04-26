@@ -9,7 +9,14 @@ from app.api.deps import CurrentUser, FileServiceDep, SessionDep, TranslatorDep
 from app.crud import update_file as crud_update_file
 from app.file_handler.file_handler import FileHandler
 from app.file_handler.file_handler_factory import FileHandlerFactory
-from app.models import ColumnTranslation, FilePublic, FileRow, FileUpdate, Message
+from app.models import (
+    ColumnTranslation,
+    FilePreview,
+    FilePublic,
+    FileRow,
+    FileUpdate,
+    Message,
+)
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -76,8 +83,12 @@ def get_file_row(
     file_handler: FileHandler = FileHandlerFactory.create_handler(
         file_service.storage_manager, file_record
     )
-    headers = file_handler.read_headers()
-    selected_headers = [header for idx, header in enumerate(headers) if idx in file_record.selected_columns]
+    headers = file_record.headers
+    selected_headers = [
+        header
+        for idx, header in enumerate(headers)
+        if idx in file_record.selected_columns
+    ]
     content = file_handler.read_row(row_index)
 
     translation = translator.translate_batch(
@@ -117,8 +128,12 @@ def update_file_row(
     elements = [element.translation for element in payload.columns]
     file_handler.write_row(row_index, elements)
 
-    headers = file_handler.read_headers()
-    selected_headers = [header for idx, header in enumerate(headers) if idx in file_record.selected_columns]
+    headers = file_record.headers
+    selected_headers = [
+        header
+        for idx, header in enumerate(headers)
+        if idx in file_record.selected_columns
+    ]
     content = file_handler.read_row(row_index)
 
     elements = [
@@ -146,10 +161,8 @@ def get_file_headers(
     file_service: FileServiceDep,
 ) -> Any:
     file_record = file_service.get_file_record(file_id, current_user.id)
-    file_handler: FileHandler = FileHandlerFactory.create_handler(
-        file_service.storage_manager, file_record
-    )
-    headers = file_handler.read_headers()
+
+    headers = file_record.headers
     return headers
 
 
@@ -163,11 +176,8 @@ def update_file(
     translator: TranslatorDep,
 ) -> Any:
     file_record = file_service.get_file_record(file_id, current_user.id)
-    file_handler: FileHandler = FileHandlerFactory.create_handler(
-        file_service.storage_manager, file_record
-    )
 
-    headers = file_handler.read_headers()
+    headers = file_record.headers
     if payload.selected_columns:
         if any(col >= len(headers) or col < 0 for col in payload.selected_columns):
             raise HTTPException(
@@ -185,3 +195,20 @@ def update_file(
     crud_update_file(session=file_service.db, db_file=file_record, file_in=payload)
 
     return file_record
+
+
+@router.get("/{file_id}/preview", response_model=FilePreview)
+def get_file_preview(
+    *,
+    file_id: uuid.UUID,
+    current_user: CurrentUser,
+    file_service: FileServiceDep,
+) -> Any:
+    file_record = file_service.get_file_record(file_id, current_user.id)
+    file_handler: FileHandler = FileHandlerFactory.create_handler(
+        file_service.storage_manager, file_record
+    )
+
+    headers = file_handler.read_headers()
+    preview = file_handler.get_preview(row_count=20)
+    return FilePreview(headers=headers, rows=preview)

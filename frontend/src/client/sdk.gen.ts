@@ -19,6 +19,8 @@ import type {
   FilesGetFileHeadersResponse,
   FilesUpdateFileData,
   FilesUpdateFileResponse,
+  FilesGetFilePreviewData,
+  FilesGetFilePreviewResponse,
   LoginLoginAccessTokenData,
   LoginLoginAccessTokenResponse,
   LoginTestTokenResponse,
@@ -228,6 +230,28 @@ export class FilesService {
       },
       body: data.requestBody,
       mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Get File Preview
+   * @param data The data for the request.
+   * @param data.fileId
+   * @returns FilePreview Successful Response
+   * @throws ApiError
+   */
+  public static getFilePreview(
+    data: FilesGetFilePreviewData,
+  ): CancelablePromise<FilesGetFilePreviewResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/files/{file_id}/preview",
+      path: {
+        file_id: data.fileId,
+      },
       errors: {
         422: "Validation Error",
       },

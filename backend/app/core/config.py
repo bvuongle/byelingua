@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     UPLOAD_MAX_SIZE: int = 10 * 1024 * 1024  # 10 MB
     UPLOAD_ALLOWED_FORMATS: list[str] = [
         "csv",
+        "xlsx",
     ]
 
     BACKEND_CORS_ORIGINS: Annotated[
