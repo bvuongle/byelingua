@@ -1,3 +1,5 @@
+from typing import Any
+
 from transformers import MarianMTModel, MarianTokenizer
 
 from app.translation.languages import Language
@@ -12,8 +14,8 @@ class Translator:
 
         self.supported_pairs = supported_pairs
 
-        self.models = {}
-        self.tokenizers = {}
+        self.models: dict[tuple[Language, Language], Any] = {}
+        self.tokenizers: dict[tuple[Language, Language], Any] = {}
 
         for src_lang, tgt_lang in self.supported_pairs.keys():
             self._load_model(src_lang, tgt_lang)

@@ -27,7 +27,7 @@ repos:
         language_version: python3
         files: ^backend/.*\.py$
 
-  # isort (import sorting)
+  # Isort (import sorting)
   - repo: https://github.com/pycqa/isort
     rev: 6.0.1
     hooks:
@@ -40,6 +40,13 @@ repos:
     hooks:
       - id: flake8
         args: ["--ignore=E501,W503"]
+        files: ^backend/.*\.py$
+
+  # Mypy (static type checker)
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
         files: ^backend/.*\.py$
 
 ci:

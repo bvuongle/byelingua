@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
 import aiofiles
 
@@ -48,7 +48,7 @@ class LocalStorageManager(StorageManager):
         return local_file_path.exists()
 
     @contextmanager
-    def open_file(self, file_path: Path, mode: str) -> Generator[TextIO, any, None]:
+    def open_file(self, file_path: Path, mode: str) -> Generator[TextIO, Any, None]:
         local_file_path = self.storage_path / file_path
         self._handle_file_not_found(local_file_path)
         with open(local_file_path, mode) as f:

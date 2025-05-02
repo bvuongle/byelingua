@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
 
 class StorageManager(ABC):
@@ -30,6 +30,6 @@ class StorageManager(ABC):
         pass
 
     @abstractmethod
-    def open_file(self, file_path: Path, mode: str) -> Generator[TextIO, any, None]:
+    def open_file(self, file_path: Path, mode: str) -> Generator[TextIO, Any, None]:
         """Yield a file handle"""
         pass
