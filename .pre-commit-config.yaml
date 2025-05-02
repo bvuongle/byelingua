@@ -9,8 +9,7 @@ repos:
       - id: check-added-large-files
       - id: check-toml
       - id: check-yaml
-        args:
-          - --unsafe
+        args: ["--unsafe"]
       - id: end-of-file-fixer
         exclude: |
             (?x)^(
@@ -28,13 +27,19 @@ repos:
         language_version: python3
         files: ^backend/.*\.py$
 
+  # isort (import sorting)
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        files: ^backend/.*\.py$
+
   # Flake8 (linter)
   - repo: https://github.com/pycqa/flake8
     rev: 7.2.0
     hooks:
       - id: flake8
-        args:
-          - --ignore=E501,W503
+        args: ["--ignore=E501,W503"]
         files: ^backend/.*\.py$
 
 ci:

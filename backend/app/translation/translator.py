@@ -1,8 +1,8 @@
 from transformers import MarianMTModel, MarianTokenizer
 
-from app.utils import logger
 from app.translation.languages import Language
 from app.translation.singleton import singleton
+from app.utils import logger
 
 
 @singleton

@@ -5,6 +5,7 @@ import pytest
 
 from app.storage_manager.local_storage import LocalStorageManager
 
+
 DATA = b"BINARY FILE CONTENTS"
 
 
