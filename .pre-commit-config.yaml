@@ -2,6 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 
 repos:
+  # Various hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -19,11 +20,21 @@ repos:
       - id: trailing-whitespace
         exclude: ^frontend/src/client/.*
 
+  # Black (formatter)
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
       - id: black
         language_version: python3
+        files: ^backend/.*\.py$
+
+  # Flake8 (linter)
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+        args:
+          - --ignore=E501,W503
         files: ^backend/.*\.py$
 
 ci:
