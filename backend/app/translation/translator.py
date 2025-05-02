@@ -28,14 +28,18 @@ class Translator:
         pair = (src_lang, tgt_lang)
 
         if pair not in self.supported_pairs:
-            raise ValueError(f"Unsupported language pair: {src_lang.value}->{tgt_lang.value}")
+            raise ValueError(
+                f"Unsupported language pair: {src_lang.value}->{tgt_lang.value}"
+            )
 
         if pair not in self.models:
             model_name = self.supported_pairs[pair]
             self.tokenizers[pair] = MarianTokenizer.from_pretrained(model_name)
             self.models[pair] = MarianMTModel.from_pretrained(model_name)
 
-    def _translate_direct(self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs) -> str:
+    def _translate_direct(
+        self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
+    ) -> str:
         pair = (src_lang, tgt_lang)
 
         if pair not in self.supported_pairs:
@@ -50,25 +54,36 @@ class Translator:
 
         return tokenizer.batch_decode(translated, skip_special_tokens=True)[0]
 
-    def _get_translation_chain(self, src_lang: Language, tgt_lang: Language) -> list[Language]:
+    def _get_translation_chain(
+        self, src_lang: Language, tgt_lang: Language
+    ) -> list[Language]:
         # Direct translation
         if (src_lang, tgt_lang) in self.supported_pairs:
             return [src_lang, tgt_lang]
 
         # Try to find a path through English as intermediate language
-        if (src_lang, Language.EN) in self.supported_pairs and (Language.EN, tgt_lang) in self.supported_pairs:
+        if (src_lang, Language.EN) in self.supported_pairs and (
+            Language.EN,
+            tgt_lang,
+        ) in self.supported_pairs:
             return [src_lang, Language.EN, tgt_lang]
 
         # Add more possible paths if needed
 
-        raise ValueError(f"No translation path found from {src_lang.value} to {tgt_lang.value}")
+        raise ValueError(
+            f"No translation path found from {src_lang.value} to {tgt_lang.value}"
+        )
 
-    def _translate_chain(self, chain: list[Language], text: str, **generation_kwargs) -> str:
+    def _translate_chain(
+        self, chain: list[Language], text: str, **generation_kwargs
+    ) -> str:
         for src_lang, tgt_lang in zip(chain[:-1], chain[1:]):
             text = self._translate_direct(src_lang, tgt_lang, text, **generation_kwargs)
         return text
 
-    def translate(self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs) -> str:
+    def translate(
+        self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
+    ) -> str:
         if src_lang == tgt_lang:
             return text
 
@@ -76,7 +91,13 @@ class Translator:
         text = self._translate_chain(chain, text, **generation_kwargs)
         return text
 
-    def translate_batch(self, src_lang: Language, tgt_lang: Language, texts: list[str], **generation_kwargs) -> list[str]:
+    def translate_batch(
+        self,
+        src_lang: Language,
+        tgt_lang: Language,
+        texts: list[str],
+        **generation_kwargs,
+    ) -> list[str]:
         return [
             self.translate(src_lang, tgt_lang, text, **generation_kwargs)
             for text in texts

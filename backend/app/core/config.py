@@ -46,9 +46,9 @@ class Settings(BaseSettings):
         "xlsx",
     ]
 
-    BACKEND_CORS_ORIGINS: Annotated[
-        list[AnyUrl] | str, BeforeValidator(parse_cors)
-    ] = []
+    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
+        []
+    )
 
     @computed_field  # type: ignore[prop-decorator]
     @property
