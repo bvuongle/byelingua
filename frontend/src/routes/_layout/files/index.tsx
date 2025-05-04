@@ -5,7 +5,7 @@ import {
   Flex,
   Heading,
   Table,
-  FileUpload,
+  FileUpload, Text,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -15,6 +15,7 @@ import { format } from "date-fns"
 import useCustomToast from "@/hooks/useCustomToast";
 import {LuSend, LuUpload} from "react-icons/lu";
 import {FilesService} from "@/client";
+import useAuth from "@/hooks/useAuth.ts";
 
 const MAX_FILES_ALLOWED = 5
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -124,7 +125,7 @@ function FilesTable() {
                 size="xs"
                 colorScheme="red"
                 m="1"
-                onClick={() => navigate({ to: `./${file.id}` })}
+                onClick={() => navigate({ to: `/files/${file.id}` })}
               >
                 Preview
               </Button>
@@ -136,8 +137,9 @@ function FilesTable() {
   );
 }
 
-function FilesPage() {
+export default function FilesPage() {
   const toast = useCustomToast()
+  const { user: currentUser } = useAuth()
   const queryClient = useQueryClient()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
@@ -165,7 +167,10 @@ function FilesPage() {
   return (
     <Container maxW="full">
       <Heading size="lg" py={8}>
-        File Management
+        <Text fontSize="2xl" truncate maxW="sm">
+          Hi, {currentUser?.full_name || currentUser?.email} 👋🏼
+        </Text>
+        <Text>Welcome back, nice to see you again!</Text>
       </Heading>
 
       <FileUpload.Root

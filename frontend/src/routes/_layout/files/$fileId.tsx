@@ -1,5 +1,3 @@
-// src/routes/_layout/files/$fileId/index.tsx
-
 import { useState, useEffect } from "react";
 import {
   Box,
@@ -23,7 +21,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FilesService, Language, UtilsService, FilesGetFilePreviewResponse } from "@/client";
-import useCustomToast from "../../../../hooks/useCustomToast";
+import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
@@ -52,7 +50,7 @@ function parseRangeString(rangeStr: string, max: number): Set<number> {
   return result;
 }
 
-export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
+export const Route = createFileRoute("/_layout/files/$fileId")({ component: FilePreviewPage });
 
 export default function FilePreviewPage() {
   const { fileId } = Route.useParams();

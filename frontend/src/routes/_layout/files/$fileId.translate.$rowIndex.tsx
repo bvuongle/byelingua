@@ -182,16 +182,16 @@ function TranslateRowPage() {
           {saveMutation.isPending ? "Saving…" : "Apply Changes"}
         </Button>
         <Button
-            onClick={
+          onClick={
             async () => {
-                await saveMutation.mutateAsync();
-                navigate({
-                    to: `/files/${fileId}/translate/${selectedRows[pos + 1]}`,
-                });
+              await saveMutation.mutateAsync();
+              navigate({
+                to: `/files/${fileId}/translate/${selectedRows[pos + 1]}`,
+              });
             }}
-            disabled={!hasNext || saveMutation.isPending}
+          disabled={!hasNext || saveMutation.isPending}
         >
-            Apply and Next Row
+          Apply and Next Row
         </Button>
         <Button
           onClick={() =>
