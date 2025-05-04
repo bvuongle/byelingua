@@ -13,7 +13,7 @@ import { useState } from "react"
 import { format } from "date-fns"
 
 import useCustomToast from "@/hooks/useCustomToast";
-import {LuSend, LuUpload} from "react-icons/lu";
+import {LuDownload, LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
 import {FilesService} from "@/client";
 import useAuth from "@/hooks/useAuth.ts";
 
@@ -87,7 +87,7 @@ function FilesTable() {
           <Table.ColumnHeader>Filename</Table.ColumnHeader>
           <Table.ColumnHeader>Uploaded At</Table.ColumnHeader>
           <Table.ColumnHeader>Last Updated</Table.ColumnHeader>
-          <Table.ColumnHeader>Actions</Table.ColumnHeader>
+          <Table.ColumnHeader style={{ width: "1%", whiteSpace: "nowrap", textAlign: "center" }}>Actions</Table.ColumnHeader>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -105,30 +105,27 @@ function FilesTable() {
               {file.last_modified ? format(new Date(file.last_modified), "PPpp") : "N/A"}
             </Table.Cell>
             <Table.Cell>
-              <Button
-                size="xs"
-                colorScheme="blue"
-                m="1"
-                onClick={() => handleDownload(file.id, file.filename)}
-              >
-                Download
-              </Button>
-              <Button
-                size="xs"
-                colorScheme="red"
-                m="1"
-                onClick={() => handleDelete(file.id)}
-              >
-                Delete
-              </Button>
-              <Button
-                size="xs"
-                colorScheme="red"
-                m="1"
-                onClick={() => navigate({ to: `/files/${file.id}` })}
-              >
-                Preview
-              </Button>
+              <Flex gap="2" justify="center">
+                <Button
+                  size="xs"
+                  onClick={() => handleDownload(file.id, file.filename)}
+                >
+                  <LuDownload /> Download
+                </Button>
+                <Button
+                  size="xs"
+                  onClick={() => navigate({ to: `/files/${file.id}` })}
+                >
+                  <LuEye /> Preview
+                </Button>
+                <Button
+                  size="xs"
+                  colorPalette="red"
+                  onClick={() => handleDelete(file.id)}
+                >
+                  <LuTrash /> Delete
+                </Button>
+              </Flex>
             </Table.Cell>
           </Table.Row>
         ))}
