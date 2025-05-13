@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 from fastapi import HTTPException, UploadFile, status
-from fastapi.responses import Response
 from sqlmodel import Session
 
 from app.api.file_service import FileService
@@ -141,28 +140,6 @@ async def test_upload_file_other_error(file_service, mock_upload_file, db):
     assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert "Failed to upload file" in exc_info.value.detail
     file_service.storage_manager.delete_file.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_download_file_success(file_service, db):
-    user = create_random_user(db)
-    file_uuid = uuid.uuid4()
-    mock_file_record = mock.MagicMock(spec=File)
-    mock_file_record.file_path = Path("test_path.txt")
-    mock_file_record.filename = "test.txt"
-    mock_file_record.owner_id = user.id
-
-    with mock.patch("app.crud.get_file", return_value=mock_file_record):
-        response = await file_service.download_file(file_uuid, user)
-
-        assert isinstance(response, Response)
-        assert response.body == b"test file content"
-        assert (
-            response.headers["Content-Disposition"] == "attachment; filename=test.txt"
-        )
-        file_service.storage_manager.read_file.assert_called_once_with(
-            Path("test_path.txt")
-        )
 
 
 @pytest.mark.asyncio

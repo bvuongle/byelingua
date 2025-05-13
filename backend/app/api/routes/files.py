@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import FileResponse
 
 from app.api.deps import CurrentUser, FileServiceDep, SessionDep, TranslatorDep
 from app.crud import update_file as crud_update_file
@@ -51,12 +51,11 @@ async def download_file(
     file_id: uuid.UUID,
     current_user: CurrentUser,
     file_service: FileServiceDep,
-) -> Response:
+) -> FileResponse:
     """
     Download a file from the server.
     """
-    file_response = await file_service.download_file(file_id, current_user)
-    return file_response
+    return file_service.download_file(file_id, current_user)
 
 
 @router.delete("/{file_id}", response_model=Message)

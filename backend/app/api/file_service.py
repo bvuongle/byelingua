@@ -3,7 +3,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile, status
-from fastapi.responses import Response
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 
 from app import crud
@@ -110,7 +110,7 @@ class FileService:
                 detail=f"Failed to upload file: {str(e)}",
             )
 
-    async def download_file(self, file_id: uuid.UUID, user: User) -> Response:
+    def download_file(self, file_id: uuid.UUID, user: User) -> FileResponse:
         """Get file from the server."""
         file_record = self.get_file_record(file_id, user.id)
 
@@ -119,15 +119,9 @@ class FileService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="File not found on server"
             )
-        contents = await self.storage_manager.read_file(file_record.file_path)
-        response = Response(
-            content=contents,
-            media_type="application/octet-stream",
-            headers={
-                "Content-Disposition": f"attachment; filename={file_record.filename}",
-            },
+        return self.storage_manager.get_file_response(
+            file_record.file_path, file_record.filename
         )
-        return response
 
     async def delete_file(self, file_id: uuid.UUID, user: User) -> None:
         """Delete file from the server."""
