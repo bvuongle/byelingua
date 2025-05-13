@@ -32,6 +32,10 @@ import type {
   LoginRecoverPasswordHtmlContentResponse,
   PrivateCreateUserData,
   PrivateCreateUserResponse,
+  ShortcutsGetShortcutsResponse,
+  ShortcutsSetShortcutsData,
+  ShortcutsSetShortcutsResponse,
+  ShortcutsDeleteShortcutsResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -384,6 +388,56 @@ export class PrivateService {
       errors: {
         422: "Validation Error",
       },
+    })
+  }
+}
+
+export class ShortcutsService {
+  /**
+   * Get Shortcuts
+   * Get the shortcuts for the current user.
+   * @returns ShortcutsPublic Successful Response
+   * @throws ApiError
+   */
+  public static getShortcuts(): CancelablePromise<ShortcutsGetShortcutsResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/shortcuts/",
+    })
+  }
+
+  /**
+   * Set Shortcuts
+   * Set the shortcuts for the current user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns ShortcutsPublic Successful Response
+   * @throws ApiError
+   */
+  public static setShortcuts(
+    data: ShortcutsSetShortcutsData,
+  ): CancelablePromise<ShortcutsSetShortcutsResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/shortcuts/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Delete Shortcuts
+   * Delete the shortcuts for the current user.
+   * @returns ShortcutsPublic Successful Response
+   * @throws ApiError
+   */
+  public static deleteShortcuts(): CancelablePromise<ShortcutsDeleteShortcutsResponse> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/api/v1/shortcuts/",
     })
   }
 }

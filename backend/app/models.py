@@ -53,6 +53,9 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     files: list["File"] = Relationship(back_populates="owner", cascade_delete=True)
+    shortcuts: "Shortcuts" = Relationship(
+        back_populates="owner", sa_relationship_kwargs={"uselist": False}
+    )
 
 
 # Properties to return via API, id is always required
@@ -158,3 +161,21 @@ class FileRow(SQLModel):
 class FilePreview(SQLModel):
     headers: list[str]
     rows: list[list[str]]
+
+
+class ShortcutsPublic(SQLModel):
+    skip: str | None = Field(default=None)
+    accept: str | None = Field(default=None)
+    accept_and_next: str | None = Field(default=None)
+    previous: str | None = Field(default=None)
+
+
+class Shortcuts(ShortcutsPublic, table=True):
+    user_id: uuid.UUID = Field(
+        foreign_key="user.id", nullable=False, primary_key=True, ondelete="CASCADE"
+    )
+    owner: User = Relationship(back_populates="shortcuts")
+    skip: str | None = Field(default=None)
+    accept: str | None = Field(default=None)
+    accept_and_next: str | None = Field(default=None)
+    previous: str | None = Field(default=None)
