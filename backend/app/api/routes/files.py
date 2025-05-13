@@ -18,6 +18,7 @@ from app.models import (
     Message,
 )
 
+
 router = APIRouter(prefix="/files", tags=["files"])
 
 
@@ -97,7 +98,7 @@ def get_file_row(
         texts=content,
     )
 
-    elements = [
+    elements: list[ColumnTranslation] = [
         ColumnTranslation(
             column_name=column_name, original=original, translation=translated
         )
@@ -136,14 +137,14 @@ def update_file_row(
     ]
     content = file_handler.read_row(row_index)
 
-    elements = [
+    response_elements: list[ColumnTranslation] = [
         ColumnTranslation(
             column_name=column_name, original=original, translation=original
         )
         for column_name, original in zip(selected_headers, content, strict=False)
     ]
 
-    response = FileRow(row_index=row_index, columns=elements)
+    response = FileRow(row_index=row_index, columns=response_elements)
 
     file_record.rows_completed = max(file_record.rows_completed, row_index + 1)
     file_record.last_modified = datetime.now()

@@ -2,8 +2,9 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from app.file_handler.file_handler import FileHandler
-from app.models import File, FileFormat
+from app.models import FileBase, FileFormat
 from app.storage_manager.storage_manager import StorageManager
+
 
 T = TypeVar("T", bound=type[FileHandler])
 
@@ -16,7 +17,9 @@ class FileHandlerFactory:
     _handlers: dict[FileFormat, type[FileHandler]] = {}
 
     @classmethod
-    def create_handler(cls, storage_manager: StorageManager, file: File) -> FileHandler:
+    def create_handler(
+        cls, storage_manager: StorageManager, file: FileBase
+    ) -> FileHandler:
         """
         Creates and returns an appropriate FileHandler instance based on the file format.
 
