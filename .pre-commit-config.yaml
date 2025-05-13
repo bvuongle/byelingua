@@ -48,6 +48,9 @@ repos:
     hooks:
       - id: mypy
         files: ^backend/.*\.py$
+        additional_dependencies:
+          - sqlmodel>=0.0.20
+          - types-aiofiles
 
 ci:
   autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks

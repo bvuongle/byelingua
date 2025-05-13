@@ -104,7 +104,7 @@ class PathType(types.TypeDecorator):
             return str(value)
         return value
 
-    def process_result_value(self, value: Any | None, dialect: Dialect) -> _T | None:
+    def process_result_value(self, value: Any | None, dialect: Dialect) -> Path | None:
         if value is not None:
             return Path(value)
         return value
@@ -147,7 +147,7 @@ class FileUpdate(SQLModel):
 class ColumnTranslation(SQLModel):
     column_name: str
     original: str
-    translation: str | None
+    translation: str
 
 
 class FileRow(SQLModel):

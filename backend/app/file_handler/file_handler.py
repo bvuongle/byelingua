@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 
-from app.models import File
+from app.models import FileBase
 from app.storage_manager.storage_manager import StorageManager
 
 
 class FileHandler(ABC):
-    def __init__(self, storage_manager: StorageManager, file: File):
+    def __init__(self, storage_manager: StorageManager, file: FileBase):
         self.storage_manager = storage_manager
         self.file = file
 

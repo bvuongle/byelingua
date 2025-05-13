@@ -17,11 +17,13 @@ from app.tests.utils.user import create_random_user
 @pytest.fixture
 def mock_storage_manager():
     with mock.patch(
-        "app.storage_manager.local_storage.LocalStorageManager", new=mock.AsyncMock()
+        "app.storage_manager.local_storage.LocalStorageManager"
     ) as mock_storage:
         instance = mock_storage.return_value
+        instance.create_file = mock.AsyncMock()
         instance.file_exists.return_value = True
-        instance.read_file.return_value = b"test file content"
+        instance.delete_file = mock.Mock()
+        instance.read_file = mock.AsyncMock(return_value=b"test file content")
         yield instance
 
 

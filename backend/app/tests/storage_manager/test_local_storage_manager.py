@@ -40,6 +40,7 @@ async def test_file_create_with_existing_path(local_storage: LocalStorageManager
         await local_storage.create_file(file_path, DATA)
 
 
+@pytest.mark.asyncio
 async def test_read_file(local_storage: LocalStorageManager):
     file_path = Path("TEST2.csv")
     await local_storage.create_file(file_path, DATA)
@@ -47,10 +48,11 @@ async def test_read_file(local_storage: LocalStorageManager):
     assert read_data == DATA
 
 
+@pytest.mark.asyncio
 async def test_read_non_existing_file(local_storage: LocalStorageManager):
     file_path = Path("TEST3.csv")
     with pytest.raises(FileNotFoundError):
-        await local_storage.create_file(file_path, DATA)
+        await local_storage.read_file(file_path)
 
 
 @pytest.mark.asyncio

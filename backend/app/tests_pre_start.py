@@ -25,6 +25,7 @@ def init(db_engine: Engine) -> None:
         # Try to create session to check if DB is awake
         with Session(db_engine) as session:
             session.exec(select(1))
+            session.close()
     except Exception as e:
         logger.error(e)
         raise e

@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
-from collections.abc import Generator
 from pathlib import Path
-from typing import Any, TextIO
+from typing import ContextManager, TextIO
 
 
 class StorageManager(ABC):
     @abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @abstractmethod
-    def create_file(self, file_path: Path, content: bytes) -> None:
+    async def create_file(self, file_path: Path, content: bytes) -> None:
         """Create a file in the storage."""
         pass
 
@@ -30,6 +29,6 @@ class StorageManager(ABC):
         pass
 
     @abstractmethod
-    def open_file(self, file_path: Path, mode: str) -> Generator[TextIO, Any, None]:
+    def open_file(self, file_path: Path, mode: str) -> ContextManager[TextIO]:
         """Yield a file handle"""
         pass
