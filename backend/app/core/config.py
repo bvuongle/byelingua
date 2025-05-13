@@ -15,6 +15,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
 
+# from models import ShortcutsMapping
+
+
 def parse_cors(v: Any) -> list[str] | str:
     if isinstance(v, str) and not v.startswith("["):
         return [i.strip() for i in v.split(",")]
@@ -125,3 +128,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # type: ignore
+
+default_shortcuts = {
+    "skip": "Ctrl + L",
+    "accept": "Ctrl + S",
+    "accept_and_next": "Ctrl + Enter",
+    "previous": "Ctrl + H",
+}

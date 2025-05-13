@@ -4,7 +4,16 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import File, FileBase, FileUpdate, User, UserCreate, UserUpdate
+from app.models import (
+    File,
+    FileBase,
+    FileUpdate,
+    Shortcuts,
+    ShortcutsPublic,
+    User,
+    UserCreate,
+    UserUpdate,
+)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -75,3 +84,33 @@ def update_file(*, session: Session, db_file: File, file_in: FileUpdate) -> File
     session.commit()
     session.refresh(db_file)
     return db_file
+
+
+def update_shortcuts(
+    *, session: Session, db_shortcut: Shortcuts, shortcuts_mapping: ShortcutsPublic
+) -> Shortcuts:
+    db_shortcut.sqlmodel_update(shortcuts_mapping)
+
+    session.add(db_shortcut)
+    session.commit()
+    session.refresh(db_shortcut)
+    return db_shortcut
+
+
+def create_shortcuts(
+    *, session: Session, shortcuts_mapping: ShortcutsPublic, owner_id: uuid.UUID
+) -> Shortcuts:
+    ShortcutsPublic.model_validate(shortcuts_mapping)
+    db_shortcut = Shortcuts.model_validate(
+        shortcuts_mapping.model_dump(),
+        update={"user_id": owner_id},
+    )
+    session.add(db_shortcut)
+    session.commit()
+    session.refresh(db_shortcut)
+    return db_shortcut
+
+
+def delete_shortcuts(*, session: Session, db_shortcut: Shortcuts) -> None:
+    session.delete(db_shortcut)
+    session.commit()
