@@ -16,7 +16,7 @@ export type Body_login_login_access_token = {
 export type ColumnTranslation = {
   column_name: string
   original: string
-  translation: string | null
+  translation: string
 }
 
 export type FileFormat = "csv" | "xlsx"
@@ -57,7 +57,7 @@ export type HTTPValidationError = {
   detail?: Array<ValidationError>
 }
 
-export type Language = "en" | "pl" | "de"
+export type Language = "en" | "pl" | "de" | "es" | "fr"
 
 export type Message = {
   message: string

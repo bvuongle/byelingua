@@ -1,9 +1,11 @@
+import mimetypes
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TextIO, cast
 
 import aiofiles
+from starlette.responses import FileResponse
 
 from app.storage_manager.storage_manager import StorageManager
 
@@ -52,3 +54,16 @@ class LocalStorageManager(StorageManager):
         self._handle_file_not_found(local_file_path)
         with open(local_file_path, mode) as f:
             yield cast(TextIO, f)
+
+    def get_file_response(self, file_path: Path, name: str) -> FileResponse:
+        local_file_path = self.storage_path / file_path
+        self._handle_file_not_found(local_file_path)
+
+        mime_type, _ = mimetypes.guess_type(local_file_path)
+        mime_type = mime_type or "application/octet-stream"
+
+        return FileResponse(
+            path=local_file_path,
+            media_type=mime_type,
+            filename=file_path.name,
+        )
