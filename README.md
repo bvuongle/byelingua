@@ -75,8 +75,9 @@ Aplikacja powinna działać w następujący sposób:
         - lingua-py – rozpoznawanie języka
     - Zarządzanie kodem:
         - uv – zarządzanie pakietami
-        - Flake8 – linter
         - Black – formatter
+        - Isort – sortowanie importów
+        - Flake8 – linter
         - Mypy – statyczna analiza kodu
 - Frontend:
     - Typescript
@@ -104,4 +105,3 @@ graph TD;
    end
 
 ```
-

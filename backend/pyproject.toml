@@ -34,11 +34,29 @@ dependencies = [
 dev-dependencies = [
     "pytest<8.0.0,>=7.4.3",
     "mypy<2.0.0,>=1.8.0",
-    "ruff<1.0.0,>=0.2.2",
     "pre-commit<4.0.0,>=3.6.2",
     "types-passlib<2.0.0.0,>=1.7.7.20240106",
     "coverage<8.0.0,>=7.4.3",
     "black>=25.1.0",
+    "flake8>=7.2.0",
+    "types-aiofiles>=24.1.0.20250326",
+    "types-openpyxl>=3.1.5.20250506",
+    "pandas-stubs>=2.2.3.250308",
+    "types-pillow>=10.2.0.20240822",
+    "types-pyyaml>=6.0.12.20250402",
+    "types-pygments>=2.19.0.20250305",
+    "types-beautifulsoup4>=4.12.0.20250204",
+    "types-colorama>=0.4.15.20240311",
+    "types-protobuf>=6.30.2.20250506",
+    "types-psutil>=7.0.0.20250401",
+    "types-pywin32>=310.0.0.20250429",
+    "types-redis>=4.6.0.20241004",
+    "types-regex>=2024.11.6.20250403",
+    "types-requests>=2.32.0.20250328",
+    "types-simplejson>=3.20.0.20250326",
+    "types-tabulate>=0.9.0.20241207",
+    "types-tqdm>=4.67.0.20250513",
+    "types-ujson>=5.10.0.20250326",
 ]
 
 [[tool.uv.index]]
@@ -62,28 +80,12 @@ build-backend = "hatchling.build"
 strict = true
 exclude = ["venv", ".venv", "alembic"]
 
-[tool.ruff]
-target-version = "py310"
-exclude = ["alembic"]
+[tool.isort]
+profile = "black"
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+lines_after_imports = 2
 
-[tool.ruff.lint]
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-    "ARG001", # unused arguments in functions
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
-ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "W191",  # indentation contains tabs
-    "B904",  # Allow raising exceptions without from e, for HTTPException
-]
-
-[tool.ruff.lint.pyupgrade]
-# Preserve types, even if a file imports `from __future__ import annotations`.
-keep-runtime-typing = true

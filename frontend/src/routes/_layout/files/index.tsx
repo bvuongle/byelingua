@@ -5,7 +5,8 @@ import {
   Flex,
   Heading,
   Table,
-  FileUpload, Text,
+  FileUpload,
+  Text,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
@@ -14,7 +15,7 @@ import { format } from "date-fns"
 
 import useCustomToast from "@/hooks/useCustomToast";
 import {LuDownload, LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
-import {FilesService} from "@/client";
+import {FilesService, OpenAPI} from "@/client";
 import useAuth from "@/hooks/useAuth.ts";
 
 const MAX_FILES_ALLOWED = 5
@@ -60,25 +61,38 @@ function FilesTable() {
   };
 
   const handleDownload = async (fileId: string, filename: string) => {
+    let objectURL: string | undefined;
     try {
-      const response = await FilesService.downloadFile({ fileId });
+      const response = await fetch(`${OpenAPI.BASE}/api/v1/files/${fileId}/download`, {
+        method: "GET",
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
 
-      // Check if response is a Blob or something compatible
-      const blob = new Blob([response as any]); // Adjust `as any` if you have a more specific type
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status} – ${text || response.statusText}`);
+      }
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
+      const blob = await response.blob();
+      objectURL = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = objectURL;
       a.download = filename;
+      a.style.display = "none";
       document.body.appendChild(a);
       a.click();
       a.remove();
-
-      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Failed to download file:", error);
+      toast.showErrorToast("Failed to download file")
+      console.error("Download error:", error);
+    } finally {
+      if (objectURL) URL.revokeObjectURL(objectURL);   // free memory
     }
-  }
+  };
 
   return (
     <Table.Root>

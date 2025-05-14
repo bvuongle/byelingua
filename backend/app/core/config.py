@@ -7,13 +7,15 @@ from pydantic import (
     BeforeValidator,
     EmailStr,
     HttpUrl,
-    PostgresDsn,
     computed_field,
     model_validator,
 )
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
+
+
+# from models import ShortcutsMapping
 
 
 def parse_cors(v: Any) -> list[str] | str:
@@ -46,9 +48,9 @@ class Settings(BaseSettings):
         "xlsx",
     ]
 
-    BACKEND_CORS_ORIGINS: Annotated[
-        list[AnyUrl] | str, BeforeValidator(parse_cors)
-    ] = []
+    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = (
+        []
+    )
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -67,7 +69,7 @@ class Settings(BaseSettings):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def SQLALCHEMY_DATABASE_URI(self) -> PostgresDsn:
+    def SQLALCHEMY_DATABASE_URI(self) -> MultiHostUrl:
         return MultiHostUrl.build(
             scheme="postgresql+psycopg",
             username=self.POSTGRES_USER,
@@ -126,3 +128,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()  # type: ignore
+
+default_shortcuts = {
+    "skip": "Ctrl + L",
+    "accept": "Ctrl + S",
+    "accept_and_next": "Ctrl + Enter",
+    "previous": "Ctrl + H",
+}

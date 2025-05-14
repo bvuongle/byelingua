@@ -10,6 +10,7 @@ from app.models import (
     UserPublic,
 )
 
+
 router = APIRouter(tags=["private"], prefix="/private")
 
 
