@@ -53,20 +53,20 @@ const ShortcutChips = ({ combo }: { combo?: string | null }) => {
   const parts = combo.split(/\s*\+\s*/).filter(Boolean)
 
   return (
-      <Center>
-        <HStack as="span" gap="0.5">
-          {parts.map((p) => (
-              <Kbd key={p} size="sm">
-                {prettifyKey(p)}
-              </Kbd>
-          ))}
-        </HStack>
-      </Center>
+    <Center>
+      <HStack as="span" gap="0.5">
+        {parts.map((p) => (
+          <Kbd key={p} size="sm">
+            {prettifyKey(p)}
+          </Kbd>
+        ))}
+      </HStack>
+    </Center>
   )
 }
 
 export const Route = createFileRoute(
-    "/_layout/files/$fileId/translate/$rowIndex",
+  "/_layout/files/$fileId/translate/$rowIndex",
 )({
   component: TranslateRowPage,
 })
@@ -96,12 +96,12 @@ function TranslateRowPage() {
   } = useQuery<FilesGetFileRowResponse>({
     queryKey: ["file-row", fileId, actualIndex],
     queryFn : () =>
-        FilesService.getFileRow({ fileId, rowIndex: actualIndex }),
+      FilesService.getFileRow({ fileId, rowIndex: actualIndex }),
     enabled : selectedRows.length > 0,
   })
 
   const [cols, setCols] = useState<
-      { column_name: string; original: string; translation: string }[]
+    { column_name: string; original: string; translation: string }[]
   >([])
   const initialCols = useRef<typeof cols>([])
 
@@ -117,16 +117,16 @@ function TranslateRowPage() {
   }, [rowData])
 
   const hasUnsavedChanges =
-      initialCols.current.length > 0 &&
-      cols.some((c, i) => c.translation !== initialCols.current[i].translation)
+    initialCols.current.length > 0 &&
+    cols.some((c, i) => c.translation !== initialCols.current[i].translation)
 
   const saveMutation = useMutation({
     mutationFn: () =>
-        FilesService.updateFileRow({
-          fileId,
-          rowIndex: actualIndex,
-          requestBody: { row_index: actualIndex, columns: cols },
-        }),
+      FilesService.updateFileRow({
+        fileId,
+        rowIndex: actualIndex,
+        requestBody: { row_index: actualIndex, columns: cols },
+      }),
     onSuccess: (data) => {
       toast.showSuccessToast("Row saved")
       qc.setQueryData(["file-row", fileId, actualIndex], () => data)
@@ -163,106 +163,106 @@ function TranslateRowPage() {
   }, [hasNext, saveMutation, goNext])
 
   useHotkeys(
-      shortcuts.previous ? norm(shortcuts.previous) : "",
-      (e) => {
-        e.preventDefault()
-        goPrev()
-      },
-      { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-      [goPrev],
+    shortcuts.previous ? norm(shortcuts.previous) : "",
+    (e) => {
+      e.preventDefault()
+      goPrev()
+    },
+    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
+    [goPrev],
   )
 
   useHotkeys(
-      shortcuts.skip ? norm(shortcuts.skip) : "",
-      (e) => {
-        e.preventDefault()
-        goNext()
-      },
-      { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-      [goNext],
+    shortcuts.skip ? norm(shortcuts.skip) : "",
+    (e) => {
+      e.preventDefault()
+      goNext()
+    },
+    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
+    [goNext],
   )
 
   useHotkeys(
-      shortcuts.accept ? norm(shortcuts.accept) : "",
-      (e) => {
-        e.preventDefault()
-        save()
-      },
-      { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-      [save],
+    shortcuts.accept ? norm(shortcuts.accept) : "",
+    (e) => {
+      e.preventDefault()
+      save()
+    },
+    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
+    [save],
   )
 
   useHotkeys(
-      shortcuts.accept_and_next ? norm(shortcuts.accept_and_next) : "",
-      (e) => {
-        e.preventDefault()
-        saveAndNext()
-      },
-      { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-      [saveAndNext],
+    shortcuts.accept_and_next ? norm(shortcuts.accept_and_next) : "",
+    (e) => {
+      e.preventDefault()
+      saveAndNext()
+    },
+    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
+    [saveAndNext],
   )
 
   if (rowLoading) {
     return (
-        <Container centerContent py={16}>
-          <Spinner size="xl" />
-        </Container>
+      <Container centerContent py={16}>
+        <Spinner size="xl" />
+      </Container>
     )
   }
   if (rowError || !rowData) {
     return (
-        <Container py={8}>
-          <Text color="red.500">Error loading row {actualIndex}.</Text>
-        </Container>
+      <Container py={8}>
+        <Text color="red.500">Error loading row {actualIndex}.</Text>
+      </Container>
     )
   }
 
   return (
-      <Container maxW="full" py={4}>
-        <Flex justify="space-between" align="center" mb={6}>
-          <Heading size="md">
-            Row {pos + 1} of {selectedRows.length}
-          </Heading>
-          <Text fontSize="sm" color="fg">
-            row #{actualIndex}
-          </Text>
-        </Flex>
+    <Container maxW="full" py={4}>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="md">
+          Row {pos + 1} of {selectedRows.length}
+        </Heading>
+        <Text fontSize="sm" color="fg">
+          row #{actualIndex}
+        </Text>
+      </Flex>
 
-        <TableContainer component={Paper} sx={{ mb: 6 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {cols.map((c) => (
-                    <TableCell key={c.column_name}>{c.column_name}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                {cols.map((c) => (
-                    <TableCell key={c.column_name}>{c.original}</TableCell>
-                ))}
-              </TableRow>
-              <TableRow>
-                {cols.map((c, idx) => (
-                    <TableCell key={c.column_name} sx={{ p: 1 }}>
-                      <Input
-                          value={c.translation}
-                          onChange={(e) => {
-                            const v = e.target.value
-                            setCols((prev) =>
-                                prev.map((col, i) =>
-                                    i === idx ? { ...col, translation: v } : col,
-                                ),
-                            )
-                          }}
-                      />
-                    </TableCell>
-                ))}
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
+      <TableContainer component={Paper} sx={{ mb: 6 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              {cols.map((c) => (
+                <TableCell key={c.column_name}>{c.column_name}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              {cols.map((c) => (
+                <TableCell key={c.column_name}>{c.original}</TableCell>
+              ))}
+            </TableRow>
+            <TableRow>
+              {cols.map((c, idx) => (
+                <TableCell key={c.column_name} sx={{ p: 1 }}>
+                  <Input
+                    value={c.translation}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      setCols((prev) =>
+                        prev.map((col, i) =>
+                          i === idx ? { ...col, translation: v } : col,
+                        ),
+                      )
+                    }}
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       <Flex gap={4} justify={"center"}>
         <Button onClick={goPrev} disabled={!hasPrev} py="8">
