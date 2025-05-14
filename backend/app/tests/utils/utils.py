@@ -1,3 +1,4 @@
+import io
 import random
 import string
 
@@ -24,3 +25,12 @@ def get_superuser_token_headers(client: TestClient) -> dict[str, str]:
     a_token = tokens["access_token"]
     headers = {"Authorization": f"Bearer {a_token}"}
     return headers
+
+
+def upload_bytes(
+    client: TestClient, headers: dict, content: bytes, fname: str = "big.csv"
+):
+    files = {"file": (fname, io.BytesIO(content), "text/csv")}
+    r = client.post(f"{settings.API_V1_STR}/files/upload", files=files, headers=headers)
+    assert r.status_code == 200
+    return r.json()
