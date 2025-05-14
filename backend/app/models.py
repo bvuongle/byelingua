@@ -119,6 +119,7 @@ class FileBase(SQLModel):
     rows_completed: int = Field(default=1)
     total_rows: int = Field(default=1)
     headers: list[str] = Field(sa_column=Column(JSON), default=[])
+    selected_rows: list[int] = Field(sa_column=Column(JSON), default=[])
     selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
@@ -145,6 +146,7 @@ class FileUpdate(SQLModel):
     target_language: Language | None = Field(default=None)
     filename: str | None = Field(default=None, max_length=255)
     selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
+    selected_rows: list[int] = Field(sa_column=Column(JSON), default=[])
 
 
 class ColumnTranslation(SQLModel):

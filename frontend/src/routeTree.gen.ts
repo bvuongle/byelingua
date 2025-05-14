@@ -21,7 +21,7 @@ import { Route as LayoutSettingsImport } from './routes/_layout/settings'
 import { Route as LayoutAdminImport } from './routes/_layout/admin'
 import { Route as LayoutFilesIndexImport } from './routes/_layout/files/index'
 import { Route as LayoutFilesFileIdIndexImport } from './routes/_layout/files/$fileId/index'
-import { Route as LayoutFilesFileIdTranslateRowIndexImport } from './routes/_layout/files/$fileId/translate/$rowIndex'
+import { Route as LayoutFilesFileIdTranslateRowIndexImport } from './routes/_layout/files/$fileId/translate.$rowIndex'
 
 // Create/Update Routes
 
