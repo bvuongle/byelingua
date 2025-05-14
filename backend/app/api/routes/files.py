@@ -45,6 +45,20 @@ async def list_files(*, current_user: CurrentUser) -> Any:
     return current_user.files
 
 
+@router.get("/{file_id}", response_model=FilePublic)
+async def get_file(
+    *,
+    file_id: uuid.UUID,
+    current_user: CurrentUser,
+    file_service: FileServiceDep,
+) -> Any:
+    """
+    Get details of a specific file.
+    """
+    file_record = file_service.get_file_record(file_id, current_user.id)
+    return file_record
+
+
 @router.get("/{file_id}/download")
 async def download_file(
     *,

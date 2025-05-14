@@ -7,10 +7,12 @@ import type {
   FilesUploadFileData,
   FilesUploadFileResponse,
   FilesListFilesResponse,
-  FilesDownloadFileData,
-  FilesDownloadFileResponse,
+  FilesGetFileData,
+  FilesGetFileResponse,
   FilesDeleteFileData,
   FilesDeleteFileResponse,
+  FilesDownloadFileData,
+  FilesDownloadFileResponse,
   FilesGetFileRowData,
   FilesGetFileRowResponse,
   FilesUpdateFileRowData,
@@ -97,19 +99,19 @@ export class FilesService {
   }
 
   /**
-   * Download File
-   * Download a file from the server.
+   * Get File
+   * Get details of a specific file.
    * @param data The data for the request.
    * @param data.fileId
-   * @returns unknown Successful Response
+   * @returns FilePublic Successful Response
    * @throws ApiError
    */
-  public static downloadFile(
-    data: FilesDownloadFileData,
-  ): CancelablePromise<FilesDownloadFileResponse> {
+  public static getFile(
+    data: FilesGetFileData,
+  ): CancelablePromise<FilesGetFileResponse> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/v1/files/{file_id}/download",
+      url: "/api/v1/files/{file_id}",
       path: {
         file_id: data.fileId,
       },
@@ -133,6 +135,29 @@ export class FilesService {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/api/v1/files/{file_id}",
+      path: {
+        file_id: data.fileId,
+      },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Download File
+   * Download a file from the server.
+   * @param data The data for the request.
+   * @param data.fileId
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static downloadFile(
+    data: FilesDownloadFileData,
+  ): CancelablePromise<FilesDownloadFileResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/v1/files/{file_id}/download",
       path: {
         file_id: data.fileId,
       },

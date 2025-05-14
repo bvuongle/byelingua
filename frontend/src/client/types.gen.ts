@@ -32,6 +32,7 @@ export type FilePublic = {
   rows_completed?: number
   total_rows?: number
   headers?: Array<string>
+  selected_rows?: Array<number>
   selected_columns?: Array<number>
   created_at?: string
   last_modified?: string
@@ -51,6 +52,7 @@ export type FileUpdate = {
   target_language?: Language | null
   filename?: string | null
   selected_columns?: Array<number>
+  selected_rows?: Array<number>
 }
 
 export type HTTPValidationError = {
@@ -146,17 +148,23 @@ export type FilesUploadFileResponse = unknown
 
 export type FilesListFilesResponse = Array<FilePublic>
 
-export type FilesDownloadFileData = {
+export type FilesGetFileData = {
   fileId: string
 }
 
-export type FilesDownloadFileResponse = unknown
+export type FilesGetFileResponse = FilePublic
 
 export type FilesDeleteFileData = {
   fileId: string
 }
 
 export type FilesDeleteFileResponse = Message
+
+export type FilesDownloadFileData = {
+  fileId: string
+}
+
+export type FilesDownloadFileResponse = unknown
 
 export type FilesGetFileRowData = {
   fileId: string

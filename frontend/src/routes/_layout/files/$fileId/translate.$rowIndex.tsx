@@ -24,6 +24,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
+  type FilesGetFileResponse,
   FilesGetFileRowResponse,
   FilesService,
 } from "@/client"
@@ -78,10 +79,22 @@ export function TranslateRowPage() {
   const toast = useCustomToast()
   const qc = useQueryClient()
   const actualIndex = parseInt(rowIndex, 10)
-  const { data: selectedRows = [] } = useQuery<number[]>({
-    queryKey: ["selectedRows", fileId],
-    queryFn : () => qc.getQueryData<number[]>(["selectedRows", fileId]) ?? [],
-  })
+  const {
+    data: fileMeta,
+    isLoading: filesLoading,
+    isError: filesError,
+  } = useQuery<FilesGetFileResponse>({
+    queryKey: ["files", fileId],
+    queryFn: () => FilesService.getFile({fileId}),
+  });
+
+  const selectedRows = fileMeta?.selected_rows ?? []
+  useEffect(() => {
+    if (fileMeta && selectedRows.length === 0) {
+      toast.showErrorToast("Cannot resume translation, no rows selected.");
+      navigate({ to: `/files/${fileId}` })
+    }
+  }, [fileMeta, selectedRows, navigate, fileId, toast])
 
   const pos      = selectedRows.findIndex((r) => r === actualIndex)
   const hasPrev  = pos > 0
@@ -201,14 +214,14 @@ export function TranslateRowPage() {
     [saveAndNext],
   )
 
-  if (rowLoading) {
+  if (filesLoading || rowLoading) {
     return (
       <Container centerContent py={16}>
         <Spinner size="xl" />
       </Container>
     )
   }
-  if (rowError || !rowData) {
+  if (filesError || rowError || !rowData) {
     return (
       <Container py={8}>
         <Text color="red.500">Error loading row {actualIndex}.</Text>

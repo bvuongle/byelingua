@@ -20,7 +20,13 @@ import {
 } from "@mui/material";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { FilesService, Language, UtilsService, FilesGetFilePreviewResponse } from "@/client";
+import {
+  FilesService,
+  Language,
+  UtilsService,
+  FilesGetFilePreviewResponse,
+  type FilesGetFileResponse
+} from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 
@@ -68,16 +74,15 @@ function FilePreviewPage() {
     queryFn: getAvailableLanguage,
   });
 
-  // fetch a list of files
+  // fetch file metadata with id
   const {
-    data: files = [],
-    isLoading: filesLoading,
-    isError: filesError,
-  } = useQuery({
-    queryKey: ["files"],
-    queryFn: () => FilesService.listFiles(),
+    data: fileMeta,
+    isLoading: fileLoading,
+    isError: fileError,
+  } = useQuery<FilesGetFileResponse>({
+    queryKey: ["files", fileId],
+    queryFn: () => FilesService.getFile({fileId}),
   });
-  const fileMeta = files.find((f) => f.id === fileId);
 
   // Download preview
   const {
@@ -93,6 +98,7 @@ function FilePreviewPage() {
   const [sourceLang, setSourceLang] = useState<Language | undefined>(undefined);
   const [targetLang, setTargetLang] = useState<Language | undefined>(undefined);
   const [selectedColumns, setSelectedColumns] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [includeRows, setIncludeRows] = useState<string>("");
   const [excludeRows, setExcludeRows] = useState<string>("");
 
@@ -101,6 +107,7 @@ function FilePreviewPage() {
     setSourceLang(fileMeta.source_language);
     setTargetLang(fileMeta.target_language);
     setSelectedColumns(fileMeta?.selected_columns || [])
+    setSelectedRows(fileMeta?.selected_rows || [])
   }, [fileMeta]);
 
   const updateMutation = useMutation({
@@ -110,6 +117,18 @@ function FilePreviewPage() {
         selectedColumns.length > 0
           ? selectedColumns
           : filePreview?.headers.map((_, i) => i);
+
+      const maxRows = fileMeta?.total_rows || 0;
+      const includeSet = parseRangeString(includeRows, maxRows);
+      const excludeSet = excludeRows.trim()
+        ? parseRangeString(excludeRows, maxRows)
+        : new Set<number>();
+      const rows = Array.from(includeSet)
+        .filter((i) => !excludeSet.has(i))
+        .sort((a, b) => a - b);
+
+      setSelectedRows(rows);
+
       return FilesService.updateFile({
         fileId,
         requestBody: {
@@ -117,6 +136,7 @@ function FilePreviewPage() {
           target_language: targetLang!,
           filename: fileMeta.filename,
           selected_columns: cols,
+          selected_rows: rows,
         },
       });
     },
@@ -125,20 +145,10 @@ function FilePreviewPage() {
       queryClient.invalidateQueries({ queryKey: ["files"] });
 
       // compute and store selected rows in React‑Query cache
-      const maxRows = fileMeta?.total_rows || 0;
-      const includeSet = parseRangeString(includeRows, maxRows);
-      const excludeSet = excludeRows.trim()
-        ? parseRangeString(excludeRows, maxRows)
-        : new Set<number>();
-      const rowList = Array.from(includeSet)
-        .filter((i) => !excludeSet.has(i))
-        .sort((a, b) => a - b);
 
-      queryClient.setQueryData<number[]>(["selectedRows", fileId], rowList);
-
-      if (rowList.length > 0) {
+      if (selectedRows.length > 0) {
         navigate({
-          to: `/files/${fileId}/translate/${rowList[0]}`,
+          to: `/files/${fileId}/translate/${selectedRows[0]}`,
         })
       } else {
         toast.showErrorToast("No rows selected to translate");
@@ -147,13 +157,13 @@ function FilePreviewPage() {
     onError: () => toast.showErrorToast("Failed to start translation"),
   });
 
-  if (langsLoading || filesLoading || previewLoading)
+  if (langsLoading || fileLoading || previewLoading)
     return (
       <Container centerContent py={16}>
         <Spinner size="xl" />
       </Container>
     );
-  if (langsError || filesError || previewError || !fileMeta)
+  if (langsError || fileError || previewError || !fileMeta)
     return (
       <Container py={8}>
         <Text color="red.500">Error loading file.</Text>
