@@ -70,7 +70,7 @@ class CSVFileHandler(FileHandler):
             preview = []
             for idx, row in enumerate(reader):
                 if idx < row_count:
-                    preview.append([row[i] for i in self.file.selected_columns])
+                    preview.append(row)
                 else:
                     break
         return preview
