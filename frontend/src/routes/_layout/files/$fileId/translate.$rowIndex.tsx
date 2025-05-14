@@ -88,13 +88,11 @@ export function TranslateRowPage() {
     queryFn: () => FilesService.getFile({fileId}),
   });
 
-  const selectedRows = fileMeta?.selected_rows ?? []
-  useEffect(() => {
-    if (fileMeta && selectedRows.length === 0) {
-      toast.showErrorToast("Cannot resume translation, no rows selected.");
-      navigate({ to: `/files/${fileId}` })
-    }
-  }, [fileMeta, selectedRows, navigate, fileId, toast])
+  const selectedRows = fileMeta
+    ? (fileMeta.selected_rows?.length
+      ? fileMeta.selected_rows
+      : Array.from({ length: fileMeta.total_rows! }, (_, i) => i))
+    : [];
 
   const pos      = selectedRows.findIndex((r) => r === actualIndex)
   const hasPrev  = pos > 0

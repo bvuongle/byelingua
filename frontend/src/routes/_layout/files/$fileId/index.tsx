@@ -18,7 +18,7 @@ import {
   TextField,
   ListItemText,
 } from "@mui/material";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   FilesService,
@@ -56,13 +56,19 @@ function parseRangeString(rangeStr: string, max: number): Set<number> {
   return result;
 }
 
+function computeRows(includeStr: string, excludeStr: string, max: number): number[] {
+  const includeSet = parseRangeString(includeStr, max);
+  const excludeSet = excludeStr.trim() ? parseRangeString(excludeStr, max) : new Set<number>();
+  const rows = Array.from(includeSet).filter((i) => !excludeSet.has(i)).sort((a, b) => a - b);
+  return rows.length === max ? [] : rows;
+}
+
 export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
 
 function FilePreviewPage() {
   const { fileId } = Route.useParams();
   const navigate = useNavigate();
   const toast = useCustomToast();
-  const queryClient = useQueryClient();
 
   // fetch available langs
   const {
@@ -107,26 +113,30 @@ function FilePreviewPage() {
     setSourceLang(fileMeta.source_language);
     setTargetLang(fileMeta.target_language);
     setSelectedColumns(fileMeta?.selected_columns || [])
-    setSelectedRows(fileMeta?.selected_rows || [])
+    setSelectedRows(fileMeta?.selected_rows?.length ? fileMeta.selected_rows : []);
   }, [fileMeta]);
+
+  const maxRows = fileMeta?.total_rows || 0;
+  const computedRows = computeRows(includeRows, excludeRows, maxRows);
+
+  const clearAll = () => {
+    setSourceLang(undefined);
+    setTargetLang(undefined);
+    if (filePreview?.headers) {
+      setSelectedColumns(filePreview.headers.map((_, i) => i));
+    }
+    setIncludeRows(`1-${maxRows}`);
+    setExcludeRows("");
+  };
 
   const updateMutation = useMutation({
     mutationFn: () => {
       if (!fileMeta) throw new Error("Missing file metadata");
-      const cols =
-        selectedColumns.length > 0
-          ? selectedColumns
-          : filePreview?.headers.map((_, i) => i);
+      const cols = selectedColumns.length > 0
+        ? selectedColumns
+        : filePreview?.headers.map((_, i) => i);
 
-      const maxRows = fileMeta?.total_rows || 0;
-      const includeSet = parseRangeString(includeRows, maxRows);
-      const excludeSet = excludeRows.trim()
-        ? parseRangeString(excludeRows, maxRows)
-        : new Set<number>();
-      const rows = Array.from(includeSet)
-        .filter((i) => !excludeSet.has(i))
-        .sort((a, b) => a - b);
-
+      const rows = computeRows(includeRows, excludeRows, maxRows);
       setSelectedRows(rows);
 
       return FilesService.updateFile({
@@ -142,17 +152,9 @@ function FilePreviewPage() {
     },
     onSuccess: () => {
       toast.showSuccessToast("Translation session initialized");
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-
-      // compute and store selected rows in React‑Query cache
-
-      if (selectedRows.length > 0) {
-        navigate({
-          to: `/files/${fileId}/translate/${selectedRows[0]}`,
-        })
-      } else {
-        toast.showErrorToast("No rows selected to translate");
-      }
+      navigate({
+        to: `/files/${fileId}/translate/${selectedRows[0] || 1}`,
+      })
     },
     onError: () => toast.showErrorToast("Failed to start translation"),
   });
@@ -170,45 +172,50 @@ function FilePreviewPage() {
       </Container>
     );
 
-  const maxRows = fileMeta?.total_rows || 0;
-  const includeSet = parseRangeString(includeRows, maxRows);
-  const excludeSet = excludeRows.trim()
-    ? parseRangeString(excludeRows, maxRows)
-    : new Set<number>();
-  const rowCount = [...includeSet].filter((i) => !excludeSet.has(i)).length;
-
-  return (
+  return updateMutation.isPending ? (
+    <Container centerContent py={16}>
+      <Spinner size="xl" />
+    </Container>
+  ) : (
     <Container maxW="full" py={4}>
       <Flex justify="space-between" mb={6} align="center">
         <Heading size="lg">Translation Preview: {fileMeta.filename}</Heading>
         <Flex gap={3}>
-          <Button onClick={() => navigate({ to: "/files" })}>Go Back</Button>
+
+          <Button onClick={() => navigate({to: "/files"})}>Go Back</Button>
           <Button
             colorScheme="blue"
             onClick={() => updateMutation.mutate()}
             disabled={!targetLang}
           >
-            {updateMutation.isPending ? <Spinner size="sm" /> : "Start Translation"}
+            {updateMutation.isPending ? <Spinner size="sm"/> : "Start Translation"}
           </Button>
         </Flex>
       </Flex>
 
       <Box bg="bg.emphasized" p={4} borderRadius="md" mb={6}>
-        <Text fontSize="sm" color="fg.muted">
-          • Leave source blank for auto‑detect.
-        </Text>
-        <Text fontSize="sm" color="fg.muted" mt={1}>
-          • Target language is required.
-        </Text>
-        <Text fontSize="sm" color="fg.muted" mt={1}>
-          • All columns/rows are selected by default.
-        </Text>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Box>
+            <Text fontSize="sm" color="fg.muted">
+              • Leave source blank for auto‑detect.
+            </Text>
+            <Text fontSize="sm" color="fg.muted" mt={1}>
+              • Target language is required.
+            </Text>
+            <Text fontSize="sm" color="fg.muted" mt={1}>
+              • All columns/rows are selected by default.
+            </Text>
+          </Box>
+          <Button onClick={clearAll}>
+            Clear All
+          </Button>
+        </Flex>
       </Box>
 
       {/* language & column selectors */}
       <Box mb={6}>
         <Flex gap={4} mb={4} wrap="wrap" align="flex-end">
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl sx={{minWidth: 120}}>
             <InputLabel id="src-lang">Source Language</InputLabel>
             <Select
               labelId="src-lang"
@@ -230,7 +237,7 @@ function FilePreviewPage() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: 120 }}>
+          <FormControl sx={{minWidth: 120}}>
             <InputLabel id="tgt-lang">Target Language</InputLabel>
             <Select
               labelId="tgt-lang"
@@ -247,7 +254,7 @@ function FilePreviewPage() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ flexGrow: 1 }}>
+          <FormControl sx={{flexGrow: 1}}>
             <InputLabel id="cols-label">Select Columns</InputLabel>
             <Select
               labelId="cols-label"
@@ -269,41 +276,56 @@ function FilePreviewPage() {
                 <Checkbox
                   checked={selectedColumns.length === filePreview?.headers.length}
                 />
-                <ListItemText primary="Select All" />
+                <ListItemText primary="Select All"/>
               </MenuItem>
               {filePreview?.headers.map((col, idx) => (
                 <MenuItem key={idx} value={idx}>
-                  <Checkbox checked={selectedColumns.includes(idx)} />
-                  <ListItemText primary={col} />
+                  <Checkbox checked={selectedColumns.includes(idx)}/>
+                  <ListItemText primary={col}/>
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
         </Flex>
 
+        <Text fontSize="md" fontWeight="bold" color="black" mt={4} mb={4}>
+          {(includeRows || excludeRows)
+            ? (computedRows.length === 0
+              ? `All ${maxRows} rows selected.`
+              : `${computedRows.length} row(s) selected out of ${maxRows}`)
+            : (fileMeta?.selected_rows?.length === 0
+              ? `All ${maxRows} rows selected.`
+              : `${selectedRows.length} row(s) selected out of ${maxRows}`)}
+        </Text>
+
         {/* row range inputs */}
         <Flex gap={4} wrap="wrap" align="center">
           <TextField
             label="Include Rows"
             placeholder="e.g. 1-10,15"
-            sx={{ flexGrow: 1 }}
+            sx={{flexGrow: 1}}
             value={includeRows}
             onChange={(e) => setIncludeRows(e.target.value)}
           />
           <TextField
             label="Exclude Rows"
             placeholder="e.g. 5,7"
-            sx={{ flexGrow: 1 }}
+            sx={{flexGrow: 1}}
             value={excludeRows}
             onChange={(e) => setExcludeRows(e.target.value)}
           />
         </Flex>
-        <Text fontSize="sm" color="gray.500" mt={2}>
-          {rowCount} rows selected.
-        </Text>
       </Box>
 
       {/* CSV preview */}
+      <Flex justify="space-between" align="center" mb={2}>
+        <Text fontSize="md" fontWeight="bold">
+          Preview first 20 rows of {fileMeta.filename}
+        </Text>
+        <Button size="sm">
+          Download
+        </Button>
+      </Flex>
       <Box
         overflowX="auto"
         overflowY="auto"
