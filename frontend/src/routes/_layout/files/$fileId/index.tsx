@@ -179,7 +179,7 @@ function FilePreviewPage() {
   ) : (
     <Container maxW="full" py={4}>
       <Flex justify="space-between" mb={6} align="center">
-        <Heading size="lg">Translation Preview: {fileMeta.filename}</Heading>
+        <Heading size="lg">Translation Configuration: {fileMeta.filename}</Heading>
         <Flex gap={3}>
 
           <Button onClick={() => navigate({to: "/files"})}>Go Back</Button>
