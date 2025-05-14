@@ -8,7 +8,9 @@ const useCustomToast = () => {
       title: "Success!",
       description,
       type: "success",
+      closable: true,
     })
+    toaster.attrs.placement = "bottom-end"
   }
 
   const showErrorToast = (description: string) => {
@@ -16,7 +18,9 @@ const useCustomToast = () => {
       title: "Something went wrong!",
       description,
       type: "error",
+      closable: true,
     })
+    toaster.attrs.placement = "bottom-end"
   }
 
   return { showSuccessToast, showErrorToast }
