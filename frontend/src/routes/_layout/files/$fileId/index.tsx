@@ -50,11 +50,11 @@ function parseRangeString(rangeStr: string, max: number): Set<number> {
   return result;
 }
 
-export const Route = createFileRoute("/_layout/files/$fileId")({ component: FilePreviewPage });
+export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
 
 function FilePreviewPage() {
   const { fileId } = Route.useParams();
-  const navigate = useNavigate({ from: "/_layout/files/$fileId" });
+  const navigate = useNavigate();
   const toast = useCustomToast();
   const queryClient = useQueryClient();
 

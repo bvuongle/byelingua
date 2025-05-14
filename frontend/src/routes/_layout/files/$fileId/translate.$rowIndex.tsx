@@ -74,7 +74,7 @@ export const Route = createFileRoute(
 export function TranslateRowPage() {
   /* ─── router / state basics ─── */
   const { fileId, rowIndex } = Route.useParams()
-  const navigate = useNavigate({ from: "/_layout/files/$fileId" })
+  const navigate = useNavigate()
   const toast = useCustomToast()
   const qc = useQueryClient()
   const actualIndex = parseInt(rowIndex, 10)
