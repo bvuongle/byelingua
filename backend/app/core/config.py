@@ -135,3 +135,11 @@ default_shortcuts = {
     "accept_and_next": "Ctrl + Enter",
     "previous": "Ctrl + H",
 }
+
+MODIFIERS: set[str] = {"Ctrl", "Alt", "Shift", "Cmd", "Meta", "Super"}
+
+LETTER_KEYS: set[str] = {chr(c) for c in range(ord("A"), ord("Z") + 1)}
+DIGIT_KEYS: set[str] = {str(d) for d in range(0, 10)}
+SPECIAL_KEYS: set[str] = {"Enter", "Esc", "Space", "Tab", "Backspace"}
+
+VALID_KEYS: set[str] = LETTER_KEYS | DIGIT_KEYS | SPECIAL_KEYS

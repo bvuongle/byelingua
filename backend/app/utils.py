@@ -12,7 +12,7 @@ from jinja2 import Template
 from jwt.exceptions import InvalidTokenError
 
 from app.core import security
-from app.core.config import settings
+from app.core.config import MODIFIERS, VALID_KEYS, settings
 
 
 logging.basicConfig(level=logging.INFO)
@@ -131,3 +131,42 @@ def import_file_handlers() -> None:
     package = "app.file_handler"
     for _, name, _ in pkgutil.iter_modules([package.replace(".", "/")]):
         import_module(f"{package}.{name}")
+
+
+def _normalise(token: str) -> str:
+    return token.strip().title()
+
+
+def validate_shortcut(value: str | None) -> str | None:
+    """
+    Pydantic AfterValidator callback.
+
+    • Accepts None/empty → returns as-is
+    • Raises ValueError for malformed shortcuts
+    • Returns a *normalised* version (‘Ctrl + P’, not ‘ctrl+p’) otherwise
+    """
+    if value in (None, ""):
+        return value
+
+    # split on "+" keeping natural order
+    parts = [_normalise(p) for p in value.split("+") if p.strip()]  # type: ignore
+    if not parts:
+        raise ValueError("Shortcut may not be blank")
+
+    *mods, key = parts
+
+    # key must be valid
+    if key not in VALID_KEYS:
+        raise ValueError(f"Invalid key name: {key!r}")
+
+    # modifiers: unique & from known set
+    seen = set()
+    for mod in mods:
+        if mod not in MODIFIERS:
+            raise ValueError(f"Unknown modifier: {mod!r}")
+        if mod in seen:
+            raise ValueError(f"Modifier repeated: {mod!r}")
+        seen.add(mod)
+
+    # return canonical form
+    return " + ".join(mods + [key])

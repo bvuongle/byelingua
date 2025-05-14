@@ -2,15 +2,16 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import sqlalchemy.types as types
-from pydantic import EmailStr
+from pydantic import AfterValidator, EmailStr
 from sqlalchemy import Dialect
 from sqlalchemy.sql.type_api import _T
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
 
 from app.translation.languages import Language
+from app.utils import validate_shortcut
 
 
 # Shared properties
@@ -167,11 +168,19 @@ class FilePreview(SQLModel):
     rows: list[list[str]]
 
 
+ShortcutStr = Annotated[str | None, AfterValidator(validate_shortcut)]
+
+
 class ShortcutsPublic(SQLModel):
-    skip: str | None = Field(default=None)
-    accept: str | None = Field(default=None)
-    accept_and_next: str | None = Field(default=None)
-    previous: str | None = Field(default=None)
+    skip: ShortcutStr = Field(default=None)
+    accept: ShortcutStr = Field(default=None)
+    accept_and_next: ShortcutStr = Field(default=None)
+    previous: ShortcutStr = Field(default=None)
+
+    model_config = {
+        "validate_assignment": True,
+        "extra": "forbid",
+    }
 
 
 class Shortcuts(ShortcutsPublic, table=True):
