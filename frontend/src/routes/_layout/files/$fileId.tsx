@@ -52,9 +52,9 @@ function parseRangeString(rangeStr: string, max: number): Set<number> {
 
 export const Route = createFileRoute("/_layout/files/$fileId")({ component: FilePreviewPage });
 
-export default function FilePreviewPage() {
+function FilePreviewPage() {
   const { fileId } = Route.useParams();
-  const navigate = useNavigate({ from: "/_layout/files" });
+  const navigate = useNavigate({ from: "/_layout/files/$fileId" });
   const toast = useCustomToast();
   const queryClient = useQueryClient();
 
@@ -68,7 +68,7 @@ export default function FilePreviewPage() {
     queryFn: getAvailableLanguage,
   });
 
-  // fetch file list
+  // fetch a list of files
   const {
     data: files = [],
     isLoading: filesLoading,
@@ -90,23 +90,18 @@ export default function FilePreviewPage() {
   });
 
   // form state
-  const [sourceLang, setSourceLang] = useState<Language | undefined>(
-    fileMeta?.source_language
-  );
-  const [targetLang, setTargetLang] = useState<Language | undefined>(
-    fileMeta?.target_language
-  );
-  const [selectedColumns, setSelectedColumns] = useState<number[]>(
-    fileMeta?.selected_columns || []
-  );
+  const [sourceLang, setSourceLang] = useState<Language | undefined>(undefined);
+  const [targetLang, setTargetLang] = useState<Language | undefined>(undefined);
+  const [selectedColumns, setSelectedColumns] = useState<number[]>([]);
   const [includeRows, setIncludeRows] = useState<string>("");
   const [excludeRows, setExcludeRows] = useState<string>("");
 
   useEffect(() => {
-    if (filePreview?.headers && selectedColumns.length === 0) {
-      setSelectedColumns(filePreview?.headers.map((_, i) => i));
-    }
-  }, [filePreview?.headers]);
+    if(!fileMeta) return;
+    setSourceLang(fileMeta.source_language);
+    setTargetLang(fileMeta.target_language);
+    setSelectedColumns(fileMeta?.selected_columns || [])
+  }, [fileMeta]);
 
   const updateMutation = useMutation({
     mutationFn: () => {
@@ -144,7 +139,7 @@ export default function FilePreviewPage() {
       if (rowList.length > 0) {
         navigate({
           to: `/files/${fileId}/translate/${rowList[0]}`,
-        });
+        })
       } else {
         toast.showErrorToast("No rows selected to translate");
       }

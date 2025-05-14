@@ -19,7 +19,7 @@ import {FilesService, OpenAPI} from "@/client";
 import useAuth from "@/hooks/useAuth.ts";
 
 const MAX_FILES_ALLOWED = 5
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+const MAX_FILE_SIZE = 100 * 1024 * 1024
 
 const getFiles = async () => {
   return FilesService.listFiles();

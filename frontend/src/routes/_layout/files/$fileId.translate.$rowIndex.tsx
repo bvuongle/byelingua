@@ -71,14 +71,13 @@ export const Route = createFileRoute(
   component: TranslateRowPage,
 })
 
-function TranslateRowPage() {
+export function TranslateRowPage() {
   /* ─── router / state basics ─── */
   const { fileId, rowIndex } = Route.useParams()
   const navigate = useNavigate({ from: "/_layout/files/$fileId" })
   const toast = useCustomToast()
   const qc = useQueryClient()
   const actualIndex = parseInt(rowIndex, 10)
-
   const { data: selectedRows = [] } = useQuery<number[]>({
     queryKey: ["selectedRows", fileId],
     queryFn : () => qc.getQueryData<number[]>(["selectedRows", fileId]) ?? [],
