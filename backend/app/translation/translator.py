@@ -2,6 +2,7 @@ from typing import Any
 
 from transformers import MarianMTModel, MarianTokenizer
 
+from app.translation.detector import Detector
 from app.translation.languages import Language
 from app.translation.singleton import singleton
 from app.utils import logger
@@ -9,8 +10,14 @@ from app.utils import logger
 
 @singleton
 class Translator:
-    def __init__(self, supported_pairs: dict[tuple[Language, Language], str]) -> None:
+    def __init__(
+        self,
+        supported_langs: list[Language],
+        supported_pairs: dict[tuple[Language, Language], str],
+    ) -> None:
         logger.info("Initializing translator")
+
+        self.detector = Detector(supported_langs)
 
         self.supported_pairs = supported_pairs
 
@@ -70,8 +77,6 @@ class Translator:
         ) in self.supported_pairs:
             return [src_lang, Language.EN, tgt_lang]
 
-        # Add more possible paths if needed
-
         raise ValueError(
             f"No translation path found from {src_lang.value} to {tgt_lang.value}"
         )
@@ -85,13 +90,23 @@ class Translator:
 
     def translate(
         self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
-    ) -> str:
+    ) -> tuple[str, str]:
         if src_lang == tgt_lang:
-            return text
+            return text, ""
+
+        detected_src_lang = self.detector.detect(text)
+
+        if detected_src_lang == tgt_lang:
+            return text, ""
+
+        if detected_src_lang is not None and detected_src_lang != src_lang:
+            error_msg = f"Source language {src_lang} does not match detected {detected_src_lang}"
+            return "", error_msg
 
         chain = self._get_translation_chain(src_lang, tgt_lang)
         text = self._translate_chain(chain, text, **generation_kwargs)
-        return text
+        message = "Language not recognized" if detected_src_lang is None else ""
+        return text, message
 
     def translate_batch(
         self,
@@ -99,7 +114,7 @@ class Translator:
         tgt_lang: Language,
         texts: list[str],
         **generation_kwargs,
-    ) -> list[str]:
+    ) -> list[tuple[str, str]]:
         return [
             self.translate(src_lang, tgt_lang, text, **generation_kwargs)
             for text in texts

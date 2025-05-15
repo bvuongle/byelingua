@@ -99,9 +99,12 @@ def get_file_row(
 
     elements: list[ColumnTranslation] = [
         ColumnTranslation(
-            column_name=column_name, original=original, translation=translated
+            column_name=column_name,
+            original=original,
+            translation=translated,
+            error_msg=error_msg,
         )
-        for column_name, original, translated in zip(
+        for column_name, original, (translated, error_msg) in zip(
             selected_headers, content, translation, strict=False
         )
     ]
@@ -138,7 +141,10 @@ def update_file_row(
 
     response_elements: list[ColumnTranslation] = [
         ColumnTranslation(
-            column_name=column_name, original=original, translation=original
+            column_name=column_name,
+            original=original,
+            translation=original,
+            error_msg="",
         )
         for column_name, original in zip(selected_headers, content, strict=False)
     ]
