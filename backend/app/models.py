@@ -153,6 +153,7 @@ class ColumnTranslation(SQLModel):
     column_name: str
     original: str
     translation: str
+    error_msg: str
 
 
 class FileRow(SQLModel):

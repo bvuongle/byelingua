@@ -13,7 +13,7 @@ from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.models import TokenPayload, User
-from app.translation.pairs import SUPPORTED_PAIRS
+from app.translation.supported import SUPPORTED_LANGS, SUPPORTED_PAIRS
 from app.translation.translator import Translator
 
 
@@ -74,7 +74,7 @@ FileServiceDep = Annotated[
 
 
 def get_translator() -> Translator:
-    return Translator(SUPPORTED_PAIRS)
+    return Translator(SUPPORTED_LANGS, SUPPORTED_PAIRS)
 
 
 TranslatorDep = Annotated[

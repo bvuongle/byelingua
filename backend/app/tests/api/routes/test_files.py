@@ -27,12 +27,14 @@ def override_translator_dependency(client: TestClient):
         def __init__(self):
             self.supported_pairs = {(Language.PL, Language.EN): "dummy"}
 
-        def translate(self, src_lang: Language, tgt_lang: Language, text: str, **kw):
-            return text + "_tx" if src_lang != tgt_lang else text
+        def translate(
+            self, src_lang: Language, tgt_lang: Language, text: str, **kw
+        ) -> tuple[str, str]:
+            return text + "_tx" if src_lang != tgt_lang else text, ""
 
         def translate_batch(
             self, src_lang: Language, tgt_lang: Language, texts: List[str], **kw
-        ):
+        ) -> list[tuple[str, str]]:
             return [self.translate(src_lang, tgt_lang, t, **kw) for t in texts]
 
     client.app.dependency_overrides[get_translator] = lambda: DummyTranslator()
@@ -101,8 +103,18 @@ def test_full_file_lifecycle(client: TestClient, db: Session) -> None:
     payload = {
         "row_index": 1,
         "columns": [
-            {"column_name": "col1", "original": "foo", "translation": new_values[0]},
-            {"column_name": "col2", "original": "bar", "translation": new_values[1]},
+            {
+                "column_name": "col1",
+                "original": "foo",
+                "translation": new_values[0],
+                "error_msg": "",
+            },
+            {
+                "column_name": "col2",
+                "original": "bar",
+                "translation": new_values[1],
+                "error_msg": "",
+            },
         ],
     }
     resp = client.post(
