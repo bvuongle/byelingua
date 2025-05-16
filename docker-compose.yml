@@ -79,6 +79,7 @@ services:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     volumes:
       - app-files-storage:/app/storage/uploads
+      - ~/.cache/huggingface:/root/.cache/huggingface
     restart: always
     networks:
       - traefik-public
