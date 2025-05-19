@@ -29,7 +29,7 @@ import {
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
-import DownloadButton from "@/components/Files/download-button.tsx";
+import DownloadButton from "@/components/Files/DownloadButton.tsx";
 import {computeRows} from "@/utils/range.ts";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();

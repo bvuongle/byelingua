@@ -9,15 +9,15 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 import { format } from "date-fns"
 
 import useCustomToast from "@/hooks/useCustomToast";
-import {LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
+import {LuSend, LuUpload} from "react-icons/lu";
 import {FilesService} from "@/client";
 import useAuth from "@/hooks/useAuth.ts";
-import DownloadButton from "@/components/Files/download-button.tsx";
+import FileActions from "@/components/Files/FileActions.tsx";
 
 const MAX_FILES_ALLOWED = 5
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
@@ -29,23 +29,9 @@ const uploadFile = async ({ file }: { file: File }) => FilesService.uploadFile({
 export const Route = createFileRoute("/_layout/files/")({ component: FilesPage });
 
 function FilesTable() {
-  const toast = useCustomToast();
-  const queryClient = useQueryClient();
-  const navigate = useNavigate({ from: "/_layout/files" });
   const { data: files = [], isError } = useQuery({
     queryKey: ["files"],
     queryFn: getFiles,
-  });
-
-  const deleteFileMutation = useMutation({
-    mutationFn: (fileId: string) => FilesService.deleteFile({ fileId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-      toast.showSuccessToast("File deleted successfully");
-    },
-    onError: () => {
-      toast.showErrorToast("Failed to delete file");
-    },
   });
 
   if (isError) {
@@ -74,23 +60,10 @@ function FilesTable() {
               {file.last_modified ? format(new Date(file.last_modified), "PPpp") : "N/A"}
             </Table.Cell>
             <Table.Cell>
-              <Flex gap="2" justify="center">
-                <DownloadButton fileId={file.id} filename={file.filename} />
-                <Button
-                  size="xs"
-                  onClick={() => navigate({ to: `/files/${file.id}` })}
-                >
-                  <LuEye /> Preview
-                </Button>
-                <Button
-                  size="xs"
-                  colorPalette="red"
-                  onClick={() => deleteFileMutation.mutate(file.id)}
-                  loading={deleteFileMutation.isPending}
-                >
-                  <LuTrash /> Delete
-                </Button>
-              </Flex>
+              <FileActions
+                fileId={file.id}
+                filename={file.filename}
+              />
             </Table.Cell>
           </Table.Row>
         ))}

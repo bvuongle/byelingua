@@ -1,5 +1,5 @@
 import {Button, Stack} from "@chakra-ui/react";
-import {ShortcutChips} from "./shortcut-chips";
+import {ShortcutChips} from "./ShortcutChips";
 
 interface NavButtonProps {
   onClick: () => void;

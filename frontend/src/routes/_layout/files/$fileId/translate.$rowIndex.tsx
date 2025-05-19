@@ -16,8 +16,8 @@ import {
 import useCustomToast from "@/hooks/useCustomToast";
 import { useShortcuts } from "@/hooks/useShortcuts";
 import {useRowHotkeys} from "@/hooks/useRowHotkeys.ts";
-import {NavButton} from "@/components/Translate/nav-button.tsx";
-import {MuiRowEditor} from "@/components/Translate/mui-row-editor.tsx";
+import {NavButton} from "@/components/Translate/NavButton.tsx";
+import {MuiRowEditor} from "@/components/Translate/MuiRowEditor.tsx";
 
 export const Route = createFileRoute(
   "/_layout/files/$fileId/translate/$rowIndex",

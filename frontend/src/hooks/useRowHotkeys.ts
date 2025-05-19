@@ -1,5 +1,5 @@
 import {useHotkeys} from "react-hotkeys-hook";
-import {norm} from "@/components/Translate/shortcut-chips.tsx";
+import {norm} from "@/utils/shortcut.ts";
 
 export function useRowHotkeys(shortcuts: any, handlers: Record<string, () => void>) {
   useHotkeys(
