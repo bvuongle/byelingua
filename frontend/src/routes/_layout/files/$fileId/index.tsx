@@ -31,6 +31,7 @@ import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 import DownloadButton from "@/components/Files/DownloadButton.tsx";
 import {computeRows} from "@/utils/range.ts";
+import {LuArrowLeft} from "react-icons/lu";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
 const getFilePreview = async (fileId: string) => FilesService.getFilePreview({fileId});
@@ -150,7 +151,7 @@ function FilePreviewPage() {
         <Heading size="lg">Translation Configuration: {fileMeta.filename}</Heading>
         <Flex gap={3}>
 
-          <Button onClick={() => navigate({to: "/files"})}>Go Back</Button>
+          <Button onClick={() => navigate({to: "/files"})}><LuArrowLeft /> Back</Button>
           <Button
             colorScheme="blue"
             onClick={() => updateMutation.mutate()}
@@ -288,7 +289,7 @@ function FilePreviewPage() {
       {/* CSV preview */}
       <Flex justify="space-between" align="center" mb={2}>
         <Text fontSize="md" fontWeight="bold">
-          Preview first 20 rows of {fileMeta.filename}
+          Preview first 20 rows of "{fileMeta.filename}"
         </Text>
         <DownloadButton fileId={fileMeta.id} filename={fileMeta.filename} />
       </Flex>

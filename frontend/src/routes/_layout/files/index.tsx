@@ -6,7 +6,7 @@ import {
   Heading,
   Table,
   FileUpload,
-  Text,
+  Text, Spinner,
 } from "@chakra-ui/react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router"
@@ -29,15 +29,22 @@ const uploadFile = async ({ file }: { file: File }) => FilesService.uploadFile({
 export const Route = createFileRoute("/_layout/files/")({ component: FilesPage });
 
 function FilesTable() {
-  const { data: files = [], isError } = useQuery({
+  const { data: files = [], isError, isLoading } = useQuery({
     queryKey: ["files"],
     queryFn: getFiles,
   });
+
+  if (isLoading) {
+    return <Spinner size={"xl"}/>
+  }
 
   if (isError) {
     return <Text color="red.500">Failed to load files.</Text>;
   }
 
+  if (files.length === 0) {
+    return <Text color="fg.muted">No files uploaded yet.</Text>;
+  }
 
   return (
     <Table.Root>
@@ -77,6 +84,7 @@ export default function FilesPage() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [dropzoneKey, setDropzoneKey] = useState<number>(Date.now());
 
   const mutation = useMutation({
     mutationFn: uploadFile,
@@ -93,6 +101,8 @@ export default function FilesPage() {
     if (selectedFiles.length === 0) return;
     selectedFiles.forEach((file) => mutation.mutate({ file }));
     setSelectedFiles([]);
+    setDropzoneKey(Date.now());
+
   };
 
   return (
@@ -105,6 +115,7 @@ export default function FilesPage() {
       </Heading>
 
       <FileUpload.Root
+        key={dropzoneKey}
         width="100%"
         alignItems="stretch"
         accept={[
@@ -128,14 +139,14 @@ export default function FilesPage() {
       </FileUpload.Root>
 
       <Flex justify="flex-end" py={4}>
-        <Button colorScheme="blue" onClick={handleUpload}>
+        <Button colorScheme="blue" onClick={handleUpload} disabled={selectedFiles.length === 0}>
           <LuSend />Submit
         </Button>
       </Flex>
 
-      <Box>
+      <Flex justify="center" align="center" py={6}>
         <FilesTable />
-      </Box>
+      </Flex>
     </Container>
   )
 }
