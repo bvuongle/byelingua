@@ -29,6 +29,7 @@ import {
 } from "@/client";
 import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
+import DownloadButton from "@/components/Files/download-button.tsx";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
 const getFilePreview = async (fileId: string) => {
@@ -322,9 +323,7 @@ function FilePreviewPage() {
         <Text fontSize="md" fontWeight="bold">
           Preview first 20 rows of {fileMeta.filename}
         </Text>
-        <Button size="sm">
-          Download
-        </Button>
+        <DownloadButton fileId={fileMeta.id} filename={fileMeta.filename} />
       </Flex>
       <Box
         overflowX="auto"

@@ -14,9 +14,10 @@ import { useState } from "react"
 import { format } from "date-fns"
 
 import useCustomToast from "@/hooks/useCustomToast";
-import {LuDownload, LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
-import {FilesService, OpenAPI} from "@/client";
+import {LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
+import {FilesService} from "@/client";
 import useAuth from "@/hooks/useAuth.ts";
+import DownloadButton from "@/components/Files/download-button.tsx";
 
 const MAX_FILES_ALLOWED = 5
 const MAX_FILE_SIZE = 100 * 1024 * 1024
@@ -55,43 +56,8 @@ function FilesTable() {
     },
   });
 
-
   const handleDelete = (fileId: string) => {
     deleteFileMutation.mutate(fileId);
-  };
-
-  const handleDownload = async (fileId: string, filename: string) => {
-    let objectURL: string | undefined;
-    try {
-      const response = await fetch(`${OpenAPI.BASE}/api/v1/files/${fileId}/download`, {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`${response.status} – ${text || response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      objectURL = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = objectURL;
-      a.download = filename;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (error) {
-      toast.showErrorToast("Failed to download file")
-      console.error("Download error:", error);
-    } finally {
-      if (objectURL) URL.revokeObjectURL(objectURL);   // free memory
-    }
   };
 
   return (
@@ -120,12 +86,7 @@ function FilesTable() {
             </Table.Cell>
             <Table.Cell>
               <Flex gap="2" justify="center">
-                <Button
-                  size="xs"
-                  onClick={() => handleDownload(file.id, file.filename)}
-                >
-                  <LuDownload /> Download
-                </Button>
+                <DownloadButton fileId={file.id} filename={file.filename} />
                 <Button
                   size="xs"
                   onClick={() => navigate({ to: `/files/${file.id}` })}
