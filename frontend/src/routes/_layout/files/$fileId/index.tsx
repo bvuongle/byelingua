@@ -30,38 +30,11 @@ import {
 import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 import DownloadButton from "@/components/Files/download-button.tsx";
+import {computeRows} from "@/utils/table-parsing.ts";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
 const getFilePreview = async (fileId: string) => {
   return FilesService.getFilePreview({fileId})
-}
-
-function parseRangeString(rangeStr: string, max: number): Set<number> {
-  const result = new Set<number>();
-  if (!rangeStr.trim()) {
-    for (let i = 1; i <= max; i++) result.add(i);
-    return result;
-  }
-  for (const part of rangeStr.split(",").map((p) => p.trim())) {
-    if (!part) continue;
-    const [start, end] = part.split("-").map((s) => parseInt(s.trim(), 10));
-    if (isNaN(start)) continue;
-    if (!isNaN(end)) {
-      const low = Math.min(start, end);
-      const high = Math.min(Math.max(start, end), max);
-      for (let i = low; i <= high; i++) result.add(i);
-    } else if (start >= 1 && start <= max) {
-      result.add(start);
-    }
-  }
-  return result;
-}
-
-function computeRows(includeStr: string, excludeStr: string, max: number): number[] {
-  const includeSet = parseRangeString(includeStr, max);
-  const excludeSet = excludeStr.trim() ? parseRangeString(excludeStr, max) : new Set<number>();
-  const rows = Array.from(includeSet).filter((i) => !excludeSet.has(i)).sort((a, b) => a - b);
-  return rows.length === max ? [] : rows;
 }
 
 export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
@@ -289,7 +262,7 @@ function FilePreviewPage() {
           </FormControl>
         </Flex>
 
-        <Text fontSize="md" fontWeight="bold" color="black" mt={4} mb={4}>
+        <Text fontSize="md" fontWeight="bold" mt={4} mb={4}>
           {(includeRows || excludeRows)
             ? (computedRows.length === 0
               ? `All ${maxRows} rows selected.`
