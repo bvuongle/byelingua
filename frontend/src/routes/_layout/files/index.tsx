@@ -20,33 +20,25 @@ import useAuth from "@/hooks/useAuth.ts";
 import DownloadButton from "@/components/Files/download-button.tsx";
 
 const MAX_FILES_ALLOWED = 5
-const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
-const getFiles = async () => {
-  return FilesService.listFiles();
-};
+const getFiles = async () => FilesService.listFiles();
 
-const uploadFile = async ({ file }: { file: File }) => {
-  return FilesService.uploadFile({formData: {file}});
-};
+const uploadFile = async ({ file }: { file: File }) => FilesService.uploadFile({formData: {file}});
 
-export const Route = createFileRoute("/_layout/files/")({
-  component: FilesPage,
-  validateSearch: () => ({}),
-});
+export const Route = createFileRoute("/_layout/files/")({ component: FilesPage });
 
 function FilesTable() {
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
+  const toast = useCustomToast();
+  const queryClient = useQueryClient();
   const navigate = useNavigate({ from: "/_layout/files" });
-  const { data: files = [] } = useQuery({
+  const { data: files = [], isError } = useQuery({
     queryKey: ["files"],
     queryFn: getFiles,
   });
 
   const deleteFileMutation = useMutation({
-    mutationFn: (fileId: string) =>
-      FilesService.deleteFile({ fileId }),
+    mutationFn: (fileId: string) => FilesService.deleteFile({ fileId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["files"] });
       toast.showSuccessToast("File deleted successfully");
@@ -56,9 +48,10 @@ function FilesTable() {
     },
   });
 
-  const handleDelete = (fileId: string) => {
-    deleteFileMutation.mutate(fileId);
-  };
+  if (isError) {
+    return <Text color="red.500">Failed to load files.</Text>;
+  }
+
 
   return (
     <Table.Root>
@@ -72,12 +65,8 @@ function FilesTable() {
       </Table.Header>
       <Table.Body>
         {files.map((file) => (
-          <Table.Row key={file.id}
-                     cursor="pointer"
-          >
-            <Table.Cell>
-              {file.filename}
-            </Table.Cell>
+          <Table.Row key={file.id} cursor="pointer">
+            <Table.Cell>{file.filename}</Table.Cell>
             <Table.Cell>
               {file.created_at ? format(new Date(file.created_at), "PPpp") : "N/A"}
             </Table.Cell>
@@ -96,7 +85,8 @@ function FilesTable() {
                 <Button
                   size="xs"
                   colorPalette="red"
-                  onClick={() => handleDelete(file.id)}
+                  onClick={() => deleteFileMutation.mutate(file.id)}
+                  loading={deleteFileMutation.isPending}
                 >
                   <LuTrash /> Delete
                 </Button>
@@ -110,31 +100,27 @@ function FilesTable() {
 }
 
 export default function FilesPage() {
-  const toast = useCustomToast()
-  const { user: currentUser } = useAuth()
-  const queryClient = useQueryClient()
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const toast = useCustomToast();
+  const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const mutation = useMutation({
     mutationFn: uploadFile,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["files"]})
-      toast.showSuccessToast("File uploaded successfully")
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      toast.showSuccessToast("File uploaded successfully");
     },
     onError: () => {
-      toast.showErrorToast("Upload failed")
+      toast.showErrorToast("Upload failed");
     },
-  })
+  });
 
   const handleUpload = () => {
-    if (selectedFiles.length === 0) return
-
-    selectedFiles.forEach(file => {
-      mutation.mutate({ file })
-    })
-
-    setSelectedFiles([])
-  }
+    if (selectedFiles.length === 0) return;
+    selectedFiles.forEach((file) => mutation.mutate({ file }));
+    setSelectedFiles([]);
+  };
 
   return (
     <Container maxW="full">
@@ -147,7 +133,6 @@ export default function FilesPage() {
 
       <FileUpload.Root
         width="100%"
-
         alignItems="stretch"
         accept={[
           "text/csv",
@@ -166,9 +151,7 @@ export default function FilesPage() {
             <Box color="fg.muted">Maximum file size: 10MB</Box>
           </FileUpload.DropzoneContent>
         </FileUpload.Dropzone>
-
         <FileUpload.List showSize clearable files={selectedFiles}/>
-
       </FileUpload.Root>
 
       <Flex justify="flex-end" py={4}>

@@ -30,12 +30,10 @@ import {
 import useCustomToast from "@/hooks/useCustomToast";
 import { getLanguageName } from "@/utils/language.ts";
 import DownloadButton from "@/components/Files/download-button.tsx";
-import {computeRows} from "@/utils/table-parsing.ts";
+import {computeRows} from "@/utils/range.ts";
 
 const getAvailableLanguage = async () => UtilsService.availableLanguages();
-const getFilePreview = async (fileId: string) => {
-  return FilesService.getFilePreview({fileId})
-}
+const getFilePreview = async (fileId: string) => FilesService.getFilePreview({fileId});
 
 export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
 
@@ -44,7 +42,6 @@ function FilePreviewPage() {
   const navigate = useNavigate();
   const toast = useCustomToast();
 
-  // fetch available langs
   const {
     data: languages = [],
     isLoading: langsLoading,
@@ -54,7 +51,6 @@ function FilePreviewPage() {
     queryFn: getAvailableLanguage,
   });
 
-  // fetch file metadata with id
   const {
     data: fileMeta,
     isLoading: fileLoading,
@@ -64,7 +60,6 @@ function FilePreviewPage() {
     queryFn: () => FilesService.getFile({fileId}),
   });
 
-  // Download preview
   const {
     data: filePreview,
     isLoading: previewLoading,
@@ -74,7 +69,6 @@ function FilePreviewPage() {
     queryFn: async () => getFilePreview(fileId),
   });
 
-  // form state
   const [sourceLang, setSourceLang] = useState<Language | undefined>(undefined);
   const [targetLang, setTargetLang] = useState<Language | undefined>(undefined);
   const [selectedColumns, setSelectedColumns] = useState<number[]>([]);
