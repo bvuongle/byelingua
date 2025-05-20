@@ -17,7 +17,7 @@ class Translator:
     ) -> None:
         logger.info("Initializing translator")
 
-        self.detector = Detector(supported_langs)
+        self._detector = Detector(supported_langs)
 
         self.supported_pairs = supported_pairs
 
@@ -88,13 +88,32 @@ class Translator:
             text = self._translate_direct(src_lang, tgt_lang, text, **generation_kwargs)
         return text
 
+    def translate_raw(
+        self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
+    ) -> str:
+        if src_lang == tgt_lang:
+            return ""
+
+        chain = self._get_translation_chain(src_lang, tgt_lang)
+        text = self._translate_chain(chain, text, **generation_kwargs)
+        return text
+
+    def translate_raw_batch(
+        self,
+        src_lang: Language,
+        tgt_lang: Language,
+        texts: list[str],
+        **generation_kwargs,
+    ) -> list[str]:
+        return [
+            self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
+            for text in texts
+        ]
+
     def translate(
         self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
     ) -> tuple[str, str]:
-        if src_lang == tgt_lang:
-            return text, ""
-
-        detected_src_lang = self.detector.detect(text)
+        detected_src_lang = self._detector.detect(text)
 
         if detected_src_lang == tgt_lang:
             return text, ""
@@ -103,8 +122,7 @@ class Translator:
             error_msg = f"Source language {src_lang} does not match detected {detected_src_lang}"
             return "", error_msg
 
-        chain = self._get_translation_chain(src_lang, tgt_lang)
-        text = self._translate_chain(chain, text, **generation_kwargs)
+        text = self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
         message = "Language not recognized" if detected_src_lang is None else ""
         return text, message
 
