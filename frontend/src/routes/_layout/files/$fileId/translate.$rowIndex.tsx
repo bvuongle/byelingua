@@ -63,8 +63,9 @@ export function TranslateRowPage() {
   });
 
   const [cols, setCols] = useState<
-    { column_name: string; original: string; translation: string }[]
+    { column_name: string; original: string; translation: string; error_msg?: string }[]
   >([]);
+
   const initialCols = useRef<typeof cols>([]);
 
   useEffect(() => {
