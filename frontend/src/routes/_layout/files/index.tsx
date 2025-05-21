@@ -2,97 +2,57 @@ import {
   Box,
   Button,
   Container,
+  FileUpload,
   Flex,
   Heading,
+  Spinner,
   Table,
-  FileUpload,
   Text,
 } from "@chakra-ui/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
-import { useState } from "react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute } from "@tanstack/react-router"
 import { format } from "date-fns"
+import { useState } from "react"
 
-import useCustomToast from "@/hooks/useCustomToast";
-import {LuDownload, LuEye, LuSend, LuTrash, LuUpload} from "react-icons/lu";
-import {FilesService, OpenAPI} from "@/client";
-import useAuth from "@/hooks/useAuth.ts";
+import { FilesService } from "@/client"
+import FileActions from "@/components/Files/FileActions.tsx"
+import useAuth from "@/hooks/useAuth.ts"
+import useCustomToast from "@/hooks/useCustomToast"
+import { LuSend, LuUpload } from "react-icons/lu"
 
 const MAX_FILES_ALLOWED = 5
-const MAX_FILE_SIZE = 100 * 1024 * 1024
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
-const getFiles = async () => {
-  return FilesService.listFiles();
-};
+const getFiles = async () => FilesService.listFiles()
 
-const uploadFile = async ({ file }: { file: File }) => {
-  return FilesService.uploadFile({formData: {file}});
-};
+const uploadFile = async ({ file }: { file: File }) =>
+  FilesService.uploadFile({ formData: { file } })
 
 export const Route = createFileRoute("/_layout/files/")({
   component: FilesPage,
-  validateSearch: () => ({}),
-});
+})
 
 function FilesTable() {
-  const toast = useCustomToast()
-  const queryClient = useQueryClient()
-  const navigate = useNavigate({ from: "/_layout/files" });
-  const { data: files = [] } = useQuery({
+  const {
+    data: files = [],
+    isError,
+    isLoading,
+  } = useQuery({
     queryKey: ["files"],
     queryFn: getFiles,
-  });
+  })
 
-  const deleteFileMutation = useMutation({
-    mutationFn: (fileId: string) =>
-      FilesService.deleteFile({ fileId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-      toast.showSuccessToast("File deleted successfully");
-    },
-    onError: () => {
-      toast.showErrorToast("Failed to delete file");
-    },
-  });
+  if (isLoading) {
+    return <Spinner size={"xl"} />
+  }
 
+  if (isError) {
+    return <Text color="red.500">Failed to load files.</Text>
+  }
 
-  const handleDelete = (fileId: string) => {
-    deleteFileMutation.mutate(fileId);
-  };
-
-  const handleDownload = async (fileId: string, filename: string) => {
-    let objectURL: string | undefined;
-    try {
-      const response = await fetch(`${OpenAPI.BASE}/api/v1/files/${fileId}/download`, {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`${response.status} – ${text || response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      objectURL = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = objectURL;
-      a.download = filename;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    } catch (error) {
-      toast.showErrorToast("Failed to download file")
-      console.error("Download error:", error);
-    } finally {
-      if (objectURL) URL.revokeObjectURL(objectURL);   // free memory
-    }
-  };
+  if (files.length === 0) {
+    return <Text color="fg.muted">No files uploaded yet.</Text>
+  }
 
   return (
     <Table.Root>
@@ -101,51 +61,35 @@ function FilesTable() {
           <Table.ColumnHeader>Filename</Table.ColumnHeader>
           <Table.ColumnHeader>Uploaded At</Table.ColumnHeader>
           <Table.ColumnHeader>Last Updated</Table.ColumnHeader>
-          <Table.ColumnHeader style={{ width: "1%", whiteSpace: "nowrap", textAlign: "center" }}>Actions</Table.ColumnHeader>
+          <Table.ColumnHeader
+            style={{ width: "1%", whiteSpace: "nowrap", textAlign: "center" }}
+          >
+            Actions
+          </Table.ColumnHeader>
         </Table.Row>
       </Table.Header>
       <Table.Body>
         {files.map((file) => (
-          <Table.Row key={file.id}
-                     cursor="pointer"
-          >
+          <Table.Row key={file.id} cursor="pointer">
+            <Table.Cell>{file.filename}</Table.Cell>
             <Table.Cell>
-              {file.filename}
+              {file.created_at
+                ? format(new Date(file.created_at), "PPpp")
+                : "N/A"}
             </Table.Cell>
             <Table.Cell>
-              {file.created_at ? format(new Date(file.created_at), "PPpp") : "N/A"}
+              {file.last_modified
+                ? format(new Date(file.last_modified), "PPpp")
+                : "N/A"}
             </Table.Cell>
             <Table.Cell>
-              {file.last_modified ? format(new Date(file.last_modified), "PPpp") : "N/A"}
-            </Table.Cell>
-            <Table.Cell>
-              <Flex gap="2" justify="center">
-                <Button
-                  size="xs"
-                  onClick={() => handleDownload(file.id, file.filename)}
-                >
-                  <LuDownload /> Download
-                </Button>
-                <Button
-                  size="xs"
-                  onClick={() => navigate({ to: `/files/${file.id}` })}
-                >
-                  <LuEye /> Preview
-                </Button>
-                <Button
-                  size="xs"
-                  colorPalette="red"
-                  onClick={() => handleDelete(file.id)}
-                >
-                  <LuTrash /> Delete
-                </Button>
-              </Flex>
+              <FileActions fileId={file.id} filename={file.filename} />
             </Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>
     </Table.Root>
-  );
+  )
 }
 
 export default function FilesPage() {
@@ -153,11 +97,12 @@ export default function FilesPage() {
   const { user: currentUser } = useAuth()
   const queryClient = useQueryClient()
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [dropzoneKey, setDropzoneKey] = useState<number>(Date.now())
 
   const mutation = useMutation({
     mutationFn: uploadFile,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["files"]})
+      queryClient.invalidateQueries({ queryKey: ["files"] })
       toast.showSuccessToast("File uploaded successfully")
     },
     onError: () => {
@@ -167,12 +112,9 @@ export default function FilesPage() {
 
   const handleUpload = () => {
     if (selectedFiles.length === 0) return
-
-    selectedFiles.forEach(file => {
-      mutation.mutate({ file })
-    })
-
+    selectedFiles.forEach((file) => mutation.mutate({ file }))
     setSelectedFiles([])
+    setDropzoneKey(Date.now())
   }
 
   return (
@@ -185,40 +127,45 @@ export default function FilesPage() {
       </Heading>
 
       <FileUpload.Root
+        key={dropzoneKey}
         width="100%"
-
         alignItems="stretch"
         accept={[
           "text/csv",
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ]}
         maxFiles={MAX_FILES_ALLOWED}
         maxFileSize={MAX_FILE_SIZE}
-        onFileAccept={(details) => {setSelectedFiles(details.files)}}
+        onFileAccept={(details) => {
+          setSelectedFiles(details.files)
+        }}
       >
         <FileUpload.HiddenInput />
         <FileUpload.Dropzone minHeight="10rem">
           <FileUpload.DropzoneContent>
-            <LuUpload/>
+            <LuUpload />
             <Box>Drag and drop files here</Box>
             <Box color="fg.muted">.xlsx, .xls, .csv</Box>
             <Box color="fg.muted">Maximum file size: 10MB</Box>
           </FileUpload.DropzoneContent>
         </FileUpload.Dropzone>
-
-        <FileUpload.List showSize clearable files={selectedFiles}/>
-
+        <FileUpload.List showSize clearable files={selectedFiles} />
       </FileUpload.Root>
 
       <Flex justify="flex-end" py={4}>
-        <Button colorScheme="blue" onClick={handleUpload}>
-          <LuSend />Submit
+        <Button
+          colorScheme="blue"
+          onClick={handleUpload}
+          disabled={selectedFiles.length === 0}
+        >
+          <LuSend />
+          Submit
         </Button>
       </Flex>
 
-      <Box>
+      <Flex justify="center" align="center" py={6}>
         <FilesTable />
-      </Box>
+      </Flex>
     </Container>
   )
 }

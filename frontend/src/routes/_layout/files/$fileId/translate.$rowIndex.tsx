@@ -1,70 +1,25 @@
-import { useState, useEffect, useRef, useCallback } from "react"
-import {
-  Container,
-  Heading,
-  Button,
-  Flex,
-  Spinner,
-  Text,
-  Input,
-  Kbd,
-  Stack,
-  HStack,
-  Center,
-} from "@chakra-ui/react"
-import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableContainer,
-  Paper,
-} from "@mui/material"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import {
   type FilesGetFileResponse,
-  FilesGetFileRowResponse,
+  type FilesGetFileRowResponse,
   FilesService,
 } from "@/client"
+import { MuiRowEditor } from "@/components/Translate/MuiRowEditor.tsx"
+import { NavButton } from "@/components/Translate/NavButton.tsx"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useRowHotkeys } from "@/hooks/useRowHotkeys.ts"
 import { useShortcuts } from "@/hooks/useShortcuts"
-import { useHotkeys } from "react-hotkeys-hook"
-
-/* ───────────────────────── helpers ───────────────────────── */
-const norm = (s: string) => s.replace(/\s*\+\s*/g, "+").toLowerCase()
-
-const prettifyKey = (k: string) => {
-  switch (k) {
-    case "ctrl":  return "Ctrl"
-    case "alt":   return "Alt"
-    case "shift": return "Shift"
-    case "meta":  return "Cmd"
-    case "←":     return "←"
-    case "→":     return "→"
-    case "↑":     return "↑"
-    case "↓":     return "↓"
-    default:      return k.length === 1 ? k.toUpperCase() : k
-  }
-}
-
-const ShortcutChips = ({ combo }: { combo?: string | null }) => {
-  if (!combo) return null
-  const parts = combo.split(/\s*\+\s*/).filter(Boolean)
-
-  return (
-    <Center>
-      <HStack as="span" gap="0.5">
-        {parts.map((p) => (
-          <Kbd key={p} size="sm">
-            {prettifyKey(p)}
-          </Kbd>
-        ))}
-      </HStack>
-    </Center>
-  )
-}
+import {
+  Button,
+  Container,
+  Flex,
+  Heading,
+  Spinner,
+  Text,
+} from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { LuArrowLeft } from "react-icons/lu"
 
 export const Route = createFileRoute(
   "/_layout/files/$fileId/translate/$rowIndex",
@@ -73,46 +28,50 @@ export const Route = createFileRoute(
 })
 
 export function TranslateRowPage() {
-  /* ─── router / state basics ─── */
   const { fileId, rowIndex } = Route.useParams()
   const navigate = useNavigate()
   const toast = useCustomToast()
   const qc = useQueryClient()
-  const actualIndex = parseInt(rowIndex, 10)
+  const actualIndex = Number.parseInt(rowIndex, 10)
+
   const {
     data: fileMeta,
     isLoading: filesLoading,
     isError: filesError,
   } = useQuery<FilesGetFileResponse>({
     queryKey: ["files", fileId],
-    queryFn: () => FilesService.getFile({fileId}),
-  });
+    queryFn: () => FilesService.getFile({ fileId }),
+  })
 
   const selectedRows = fileMeta
-    ? (fileMeta.selected_rows?.length
+    ? fileMeta.selected_rows?.length
       ? fileMeta.selected_rows
-      : Array.from({ length: fileMeta.total_rows! }, (_, i) => i))
-    : [];
+      : Array.from({ length: fileMeta.total_rows! }, (_, i) => i)
+    : []
 
-  const pos      = selectedRows.findIndex((r) => r === actualIndex)
-  const hasPrev  = pos > 0
-  const hasNext  = pos < selectedRows.length - 1
+  const pos = selectedRows.findIndex((r) => r === actualIndex)
+  const hasPrev = pos > 0
+  const hasNext = pos < selectedRows.length - 1
 
   const {
     data: rowData,
     isLoading: rowLoading,
-    isError:   rowError,
-    refetch:   refetchRow,
+    isError: rowError,
   } = useQuery<FilesGetFileRowResponse>({
     queryKey: ["file-row", fileId, actualIndex],
-    queryFn : () =>
-      FilesService.getFileRow({ fileId, rowIndex: actualIndex }),
-    enabled : selectedRows.length > 0,
+    queryFn: () => FilesService.getFileRow({ fileId, rowIndex: actualIndex }),
+    enabled: selectedRows.length > 0,
   })
 
   const [cols, setCols] = useState<
-    { column_name: string; original: string; translation: string }[]
+    {
+      column_name: string
+      original: string
+      translation: string
+      error_msg?: string
+    }[]
   >([])
+
   const initialCols = useRef<typeof cols>([])
 
   useEffect(() => {
@@ -140,7 +99,6 @@ export function TranslateRowPage() {
     onSuccess: (data) => {
       toast.showSuccessToast("Row saved")
       qc.setQueryData(["file-row", fileId, actualIndex], () => data)
-      refetchRow()
     },
     onError: () => toast.showErrorToast("Failed to save row"),
   })
@@ -172,45 +130,7 @@ export function TranslateRowPage() {
     goNext()
   }, [hasNext, saveMutation, goNext])
 
-  useHotkeys(
-    shortcuts.previous ? norm(shortcuts.previous) : "",
-    (e) => {
-      e.preventDefault()
-      goPrev()
-    },
-    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-    [goPrev],
-  )
-
-  useHotkeys(
-    shortcuts.skip ? norm(shortcuts.skip) : "",
-    (e) => {
-      e.preventDefault()
-      goNext()
-    },
-    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-    [goNext],
-  )
-
-  useHotkeys(
-    shortcuts.accept ? norm(shortcuts.accept) : "",
-    (e) => {
-      e.preventDefault()
-      save()
-    },
-    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-    [save],
-  )
-
-  useHotkeys(
-    shortcuts.accept_and_next ? norm(shortcuts.accept_and_next) : "",
-    (e) => {
-      e.preventDefault()
-      saveAndNext()
-    },
-    { enableOnFormTags: ["INPUT", "TEXTAREA"] },
-    [saveAndNext],
-  )
+  useRowHotkeys(shortcuts, { goPrev, goNext, save, saveAndNext })
 
   if (filesLoading || rowLoading) {
     return (
@@ -229,89 +149,50 @@ export function TranslateRowPage() {
 
   return (
     <Container maxW="full" py={4}>
-      <Flex justify="space-between" align="center" mb={6}>
-        <Heading size="md">
-          Row {pos + 1} of {selectedRows.length}
-        </Heading>
-        <Text fontSize="sm" color="fg">
-          row #{actualIndex}
-        </Text>
+      <Flex justify="space-between" align="center" mb={10}>
+        <Flex direction="column">
+          <Heading size="xl">
+            Translation for row {actualIndex} of {fileMeta?.filename}
+          </Heading>
+          <Text fontSize="md" color="fg" mt={2}>
+            Row {pos + 1} of {selectedRows.length} selected rows
+          </Text>
+        </Flex>
+        <Button onClick={() => navigate({ to: `/files/${fileId}` })}>
+          <LuArrowLeft /> Back to File Preview
+        </Button>
       </Flex>
 
-      <TableContainer component={Paper} sx={{ mb: 6 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {cols.map((c) => (
-                <TableCell key={c.column_name}>{c.column_name}</TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              {cols.map((c) => (
-                <TableCell key={c.column_name}>{c.original}</TableCell>
-              ))}
-            </TableRow>
-            <TableRow>
-              {cols.map((c, idx) => (
-                <TableCell key={c.column_name} sx={{ p: 1 }}>
-                  <Input
-                    value={c.translation}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setCols((prev) =>
-                        prev.map((col, i) =>
-                          i === idx ? { ...col, translation: v } : col,
-                        ),
-                      )
-                    }}
-                  />
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <MuiRowEditor cols={cols} setCols={setCols} />
 
-      <Flex gap={4} justify={"center"}>
-        <Button onClick={goPrev} disabled={!hasPrev} py="8">
-          <Stack >
-            Previous Row
-            <ShortcutChips combo={shortcuts.previous} />
-          </Stack>
-        </Button>
-
-        <Button
-          colorScheme="blue"
+      <Flex gap={4} justify="center">
+        <NavButton
+          onClick={goPrev}
+          disabled={!hasPrev}
+          label="Previous Row"
+          shortcut={shortcuts.previous}
+        />
+        <NavButton
           onClick={() => saveMutation.mutate()}
           disabled={!hasUnsavedChanges || saveMutation.isPending}
-          py="8"
-        >
-          <Stack>
-            {saveMutation.isPending ? "Saving…" : "Apply Changes"}
-            <ShortcutChips combo={shortcuts.accept} />
-          </Stack>
-        </Button>
-
-        <Button
+          label="Apply Changes"
+          shortcut={shortcuts.accept}
+          colorScheme="blue"
+          loading={saveMutation.isPending}
+        />
+        <NavButton
           onClick={saveAndNext}
           disabled={!hasNext || saveMutation.isPending}
-          py="8"
-        >
-          <Stack>
-            Apply and Next Row
-            <ShortcutChips combo={shortcuts.accept_and_next} />
-          </Stack>
-        </Button>
-
-        <Button onClick={goNext} disabled={!hasNext} py="8">
-          <Stack>
-            Next Row
-            <ShortcutChips combo={shortcuts.skip} />
-          </Stack>
-        </Button>
+          label="Apply and Next Row"
+          shortcut={shortcuts.accept_and_next}
+        />
+        <NavButton
+          onClick={goNext}
+          disabled={!hasNext}
+          label="Next Row"
+          shortcut={shortcuts.skip}
+        />
       </Flex>
     </Container>
-  );
+  )
 }

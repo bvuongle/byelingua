@@ -1,4 +1,4 @@
-import {Container, Flex, Image, Input, Text} from "@chakra-ui/react"
+import { Container, Flex, Image, Input, Text } from "@chakra-ui/react"
 import {
   Link as RouterLink,
   createFileRoute,
@@ -68,23 +68,22 @@ function Login() {
       >
         <Flex align={"center"} justify="center" mb={2}>
           <Image
-              src={Logo}
-              alt="ByeLingua Logo"
-              height="6rem"
-              maxW="2xs"
-              alignSelf="center"
-              mb={4}
+            src={Logo}
+            alt="ByeLingua Logo"
+            height="6rem"
+            maxW="2xs"
+            alignSelf="center"
+            mb={4}
           />
           <Text
-                fontSize="4xl"
-                fontWeight="bold"
-                color="fg"
-                textAlign="center"
-                ml={5}
+            fontSize="4xl"
+            fontWeight="bold"
+            color="fg"
+            textAlign="center"
+            ml={5}
           >
             ByeLingua
           </Text>
-
         </Flex>
         <Field
           invalid={!!errors.username}
