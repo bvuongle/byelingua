@@ -1,9 +1,9 @@
-import {Center, HStack, Kbd} from "@chakra-ui/react";
-import {prettifyKey} from "@/utils/shortcut.ts";
+import { prettifyKey } from "@/utils/shortcut.ts"
+import { Center, HStack, Kbd } from "@chakra-ui/react"
 
 export const ShortcutChips = ({ combo }: { combo?: string | null }) => {
-  if (!combo) return null;
-  const parts = combo.split(/\s*\+\s*/).filter(Boolean);
+  if (!combo) return null
+  const parts = combo.split(/\s*\+\s*/).filter(Boolean)
 
   return (
     <Center>
@@ -15,5 +15,5 @@ export const ShortcutChips = ({ combo }: { combo?: string | null }) => {
         ))}
       </HStack>
     </Center>
-  );
-};
+  )
+}

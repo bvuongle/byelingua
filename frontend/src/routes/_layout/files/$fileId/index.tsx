@@ -1,47 +1,50 @@
-import { useState, useEffect } from "react";
+import {
+  type FilesGetFilePreviewResponse,
+  type FilesGetFileResponse,
+  FilesService,
+  type Language,
+  UtilsService,
+} from "@/client"
+import DownloadButton from "@/components/Files/DownloadButton.tsx"
+import useCustomToast from "@/hooks/useCustomToast"
+import { getLanguageName } from "@/utils/language.ts"
+import { computeRows } from "@/utils/range.ts"
 import {
   Box,
-  Container,
-  Heading,
-  Table,
   Button,
+  Container,
   Flex,
+  Heading,
   Spinner,
+  Table,
   Text,
-} from "@chakra-ui/react";
+} from "@chakra-ui/react"
 import {
+  Checkbox,
   FormControl,
   InputLabel,
-  Select,
-  MenuItem,
-  Checkbox,
-  TextField,
   ListItemText,
-} from "@mui/material";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  FilesService,
-  Language,
-  UtilsService,
-  FilesGetFilePreviewResponse,
-  type FilesGetFileResponse
-} from "@/client";
-import useCustomToast from "@/hooks/useCustomToast";
-import { getLanguageName } from "@/utils/language.ts";
-import DownloadButton from "@/components/Files/DownloadButton.tsx";
-import {computeRows} from "@/utils/range.ts";
-import {LuArrowLeft} from "react-icons/lu";
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
+import { LuArrowLeft } from "react-icons/lu"
 
-const getAvailableLanguage = async () => UtilsService.availableLanguages();
-const getFilePreview = async (fileId: string) => FilesService.getFilePreview({fileId});
+const getAvailableLanguage = async () => UtilsService.availableLanguages()
+const getFilePreview = async (fileId: string) =>
+  FilesService.getFilePreview({ fileId })
 
-export const Route = createFileRoute("/_layout/files/$fileId/")({ component: FilePreviewPage });
+export const Route = createFileRoute("/_layout/files/$fileId/")({
+  component: FilePreviewPage,
+})
 
 function FilePreviewPage() {
-  const { fileId } = Route.useParams();
-  const navigate = useNavigate();
-  const toast = useCustomToast();
+  const { fileId } = Route.useParams()
+  const navigate = useNavigate()
+  const toast = useCustomToast()
 
   const {
     data: languages = [],
@@ -50,7 +53,7 @@ function FilePreviewPage() {
   } = useQuery<string[]>({
     queryKey: ["avail-langs"],
     queryFn: getAvailableLanguage,
-  });
+  })
 
   const {
     data: fileMeta,
@@ -58,8 +61,8 @@ function FilePreviewPage() {
     isError: fileError,
   } = useQuery<FilesGetFileResponse>({
     queryKey: ["files", fileId],
-    queryFn: () => FilesService.getFile({fileId}),
-  });
+    queryFn: () => FilesService.getFile({ fileId }),
+  })
 
   const {
     data: filePreview,
@@ -68,45 +71,48 @@ function FilePreviewPage() {
   } = useQuery<FilesGetFilePreviewResponse>({
     queryKey: ["file-preview", fileId],
     queryFn: async () => getFilePreview(fileId),
-  });
+  })
 
-  const [sourceLang, setSourceLang] = useState<Language | undefined>(undefined);
-  const [targetLang, setTargetLang] = useState<Language | undefined>(undefined);
-  const [selectedColumns, setSelectedColumns] = useState<number[]>([]);
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
-  const [includeRows, setIncludeRows] = useState<string>("");
-  const [excludeRows, setExcludeRows] = useState<string>("");
+  const [sourceLang, setSourceLang] = useState<Language | undefined>(undefined)
+  const [targetLang, setTargetLang] = useState<Language | undefined>(undefined)
+  const [selectedColumns, setSelectedColumns] = useState<number[]>([])
+  const [selectedRows, setSelectedRows] = useState<number[]>([])
+  const [includeRows, setIncludeRows] = useState<string>("")
+  const [excludeRows, setExcludeRows] = useState<string>("")
 
   useEffect(() => {
-    if(!fileMeta) return;
-    setSourceLang(fileMeta.source_language);
-    setTargetLang(fileMeta.target_language);
+    if (!fileMeta) return
+    setSourceLang(fileMeta.source_language)
+    setTargetLang(fileMeta.target_language)
     setSelectedColumns(fileMeta?.selected_columns || [])
-    setSelectedRows(fileMeta?.selected_rows?.length ? fileMeta.selected_rows : []);
-  }, [fileMeta]);
+    setSelectedRows(
+      fileMeta?.selected_rows?.length ? fileMeta.selected_rows : [],
+    )
+  }, [fileMeta])
 
-  const maxRows = fileMeta?.total_rows || 0;
-  const computedRows = computeRows(includeRows, excludeRows, maxRows);
+  const maxRows = fileMeta?.total_rows || 0
+  const computedRows = computeRows(includeRows, excludeRows, maxRows)
 
   const clearAll = () => {
-    setSourceLang(undefined);
-    setTargetLang(undefined);
+    setSourceLang(undefined)
+    setTargetLang(undefined)
     if (filePreview?.headers) {
-      setSelectedColumns(filePreview.headers.map((_, i) => i));
+      setSelectedColumns(filePreview.headers.map((_, i) => i))
     }
-    setIncludeRows(`1-${maxRows}`);
-    setExcludeRows("");
-  };
+    setIncludeRows(`1-${maxRows}`)
+    setExcludeRows("")
+  }
 
   const updateMutation = useMutation({
     mutationFn: () => {
-      if (!fileMeta) throw new Error("Missing file metadata");
-      const cols = selectedColumns.length > 0
-        ? selectedColumns
-        : filePreview?.headers.map((_, i) => i);
+      if (!fileMeta) throw new Error("Missing file metadata")
+      const cols =
+        selectedColumns.length > 0
+          ? selectedColumns
+          : filePreview?.headers.map((_, i) => i)
 
-      const rows = computeRows(includeRows, excludeRows, maxRows);
-      setSelectedRows(rows);
+      const rows = computeRows(includeRows, excludeRows, maxRows)
+      setSelectedRows(rows)
 
       return FilesService.updateFile({
         fileId,
@@ -117,29 +123,32 @@ function FilePreviewPage() {
           selected_columns: cols,
           selected_rows: rows,
         },
-      });
+      })
     },
     onSuccess: () => {
-      toast.showSuccessToast("Translation session initialized");
+      toast.showSuccessToast("Translation session initialized")
       navigate({
         to: `/files/${fileId}/translate/${selectedRows[0] || 1}`,
       })
     },
-    onError: () => toast.showErrorToast("Failed to start translation"),
-  });
+    onError: () =>
+      toast.showErrorToast(
+        "Failed to start translation. Please check your configuration.",
+      ),
+  })
 
   if (langsLoading || fileLoading || previewLoading)
     return (
       <Container centerContent py={16}>
         <Spinner size="xl" />
       </Container>
-    );
+    )
   if (langsError || fileError || previewError || !fileMeta)
     return (
       <Container py={8}>
         <Text color="red.500">Error loading file.</Text>
       </Container>
-    );
+    )
 
   return updateMutation.isPending ? (
     <Container centerContent py={16}>
@@ -148,16 +157,22 @@ function FilePreviewPage() {
   ) : (
     <Container maxW="full" py={4}>
       <Flex justify="space-between" mb={6} align="center">
-        <Heading size="lg">Translation Configuration: {fileMeta.filename}</Heading>
+        <Heading size="lg">
+          Translation Configuration: {fileMeta.filename}
+        </Heading>
         <Flex gap={3}>
-
-          <Button onClick={() => navigate({to: "/files"})}><LuArrowLeft /> Back</Button>
+          <Button onClick={() => navigate({ to: "/files" })}>
+            <LuArrowLeft /> Back
+          </Button>
           <Button
-            colorScheme="blue"
             onClick={() => updateMutation.mutate()}
             disabled={!targetLang}
           >
-            {updateMutation.isPending ? <Spinner size="sm"/> : "Start Translation"}
+            {updateMutation.isPending ? (
+              <Spinner size="sm" />
+            ) : (
+              "Start Translation"
+            )}
           </Button>
         </Flex>
       </Flex>
@@ -175,16 +190,14 @@ function FilePreviewPage() {
               • All columns/rows are selected by default.
             </Text>
           </Box>
-          <Button onClick={clearAll}>
-            Clear All
-          </Button>
+          <Button onClick={clearAll}>Clear All</Button>
         </Flex>
       </Box>
 
       {/* language & column selectors */}
       <Box mb={6}>
         <Flex gap={4} mb={4} wrap="wrap" align="flex-end">
-          <FormControl sx={{minWidth: 120}}>
+          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel id="src-lang">Source Language</InputLabel>
             <Select
               labelId="src-lang"
@@ -206,7 +219,7 @@ function FilePreviewPage() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{minWidth: 120}}>
+          <FormControl sx={{ minWidth: 120 }}>
             <InputLabel id="tgt-lang">Target Language</InputLabel>
             <Select
               labelId="tgt-lang"
@@ -223,7 +236,7 @@ function FilePreviewPage() {
             </Select>
           </FormControl>
 
-          <FormControl sx={{flexGrow: 1}}>
+          <FormControl sx={{ flexGrow: 1 }}>
             <InputLabel id="cols-label">Select Columns</InputLabel>
             <Select
               labelId="cols-label"
@@ -231,26 +244,26 @@ function FilePreviewPage() {
               value={selectedColumns}
               onChange={(e) =>
                 setSelectedColumns(
-                  (e.target.value as number[]).filter((v) => v >= 0)
+                  (e.target.value as number[]).filter((v) => v >= 0),
                 )
               }
               renderValue={(sel) =>
-                (sel as number[])
-                  .map((i) => filePreview?.headers[i])
-                  .join(", ")
+                (sel as number[]).map((i) => filePreview?.headers[i]).join(", ")
               }
               label="Select Columns"
             >
               <MenuItem value={-1}>
                 <Checkbox
-                  checked={selectedColumns.length === filePreview?.headers.length}
+                  checked={
+                    selectedColumns.length === filePreview?.headers.length
+                  }
                 />
-                <ListItemText primary="Select All"/>
+                <ListItemText primary="Select All" />
               </MenuItem>
               {filePreview?.headers.map((col, idx) => (
                 <MenuItem key={idx} value={idx}>
-                  <Checkbox checked={selectedColumns.includes(idx)}/>
-                  <ListItemText primary={col}/>
+                  <Checkbox checked={selectedColumns.includes(idx)} />
+                  <ListItemText primary={col} />
                 </MenuItem>
               ))}
             </Select>
@@ -258,13 +271,13 @@ function FilePreviewPage() {
         </Flex>
 
         <Text fontSize="md" fontWeight="bold" mt={4} mb={4}>
-          {(includeRows || excludeRows)
-            ? (computedRows.length === 0
+          {includeRows || excludeRows
+            ? computedRows.length === 0
               ? `All ${maxRows} rows selected.`
-              : `${computedRows.length} row(s) selected out of ${maxRows}`)
-            : (fileMeta?.selected_rows?.length === 0
+              : `${computedRows.length} row(s) selected out of ${maxRows}`
+            : fileMeta?.selected_rows?.length === 0
               ? `All ${maxRows} rows selected.`
-              : `${selectedRows.length} row(s) selected out of ${maxRows}`)}
+              : `${selectedRows.length} row(s) selected out of ${maxRows}`}
         </Text>
 
         {/* row range inputs */}
@@ -272,14 +285,14 @@ function FilePreviewPage() {
           <TextField
             label="Include Rows"
             placeholder="e.g. 1-10,15"
-            sx={{flexGrow: 1}}
+            sx={{ flexGrow: 1 }}
             value={includeRows}
             onChange={(e) => setIncludeRows(e.target.value)}
           />
           <TextField
             label="Exclude Rows"
             placeholder="e.g. 5,7"
-            sx={{flexGrow: 1}}
+            sx={{ flexGrow: 1 }}
             value={excludeRows}
             onChange={(e) => setExcludeRows(e.target.value)}
           />
@@ -321,5 +334,5 @@ function FilePreviewPage() {
         </Table.Root>
       </Box>
     </Container>
-  );
+  )
 }
