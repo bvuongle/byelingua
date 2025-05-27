@@ -72,3 +72,28 @@ def test_translation_chain_implicit(translator: Translator):
     assert (Language.EN, Language.DE) in translator.supported_pairs
     output = translator.translate_raw(Language.PL, Language.DE, "Cześć!")
     assert output == "Guten Tag!"
+
+
+@pytest.mark.slow
+def test_is_supported_direct(translator: Translator):
+    assert (Language.PL, Language.EN) in translator.supported_pairs
+    assert translator.is_supported(Language.PL, Language.EN)
+
+
+@pytest.mark.slow
+def test_is_supported_chain(translator: Translator):
+    assert (Language.PL, Language.DE) not in translator.supported_pairs
+    assert (Language.PL, Language.EN) in translator.supported_pairs
+    assert (Language.EN, Language.DE) in translator.supported_pairs
+    assert translator.is_supported(Language.PL, Language.DE)
+
+
+@pytest.mark.slow
+def test_is_supported_auto(translator: Translator):
+    assert translator.is_supported(Language.AUTO, Language.EN)
+
+
+@pytest.mark.slow
+def test_is_supported_unsupported(translator: Translator):
+    assert (Language.DE, Language.EN) not in translator.supported_pairs
+    assert not translator.is_supported(Language.DE, Language.EN)

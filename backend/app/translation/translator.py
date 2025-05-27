@@ -17,9 +17,10 @@ class Translator:
     ) -> None:
         logger.info("Initializing translator")
 
-        self._detector = Detector(supported_langs)
-
+        self.supported_langs = supported_langs
         self.supported_pairs = supported_pairs
+
+        self._detector = Detector(supported_langs)
 
         self.models: dict[tuple[Language, Language], Any] = {}
         self.tokenizers: dict[tuple[Language, Language], Any] = {}
@@ -28,6 +29,20 @@ class Translator:
             self._load_model(src_lang, tgt_lang)
 
         logger.info("All models loaded")
+
+    def is_supported(self, src_lang: Language, tgt_lang: Language) -> bool:
+        if src_lang == Language.AUTO and tgt_lang in self.supported_langs:
+            return True
+
+        if (src_lang, tgt_lang) in self.supported_pairs:
+            return True
+
+        try:
+            self._get_translation_chain(src_lang, tgt_lang)
+            return True
+        except ValueError:
+            pass
+        return False
 
     def _load_model(self, src_lang: Language, tgt_lang: Language) -> None:
         # models are downloaded to ~/.cache/huggingface
@@ -118,7 +133,12 @@ class Translator:
         if detected_src_lang == tgt_lang:
             return text, ""
 
-        if detected_src_lang is not None and detected_src_lang != src_lang:
+        if src_lang == Language.AUTO:
+            if detected_src_lang is None:
+                return "", "Unable to recognize source language"
+            src_lang = detected_src_lang
+
+        elif detected_src_lang is not None and detected_src_lang != src_lang:
             error_msg = f"Source language {src_lang} does not match detected {detected_src_lang}"
             return "", error_msg
 

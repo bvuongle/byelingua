@@ -181,13 +181,13 @@ function FilePreviewPage() {
         <Flex justifyContent="space-between" alignItems="center">
           <Box>
             <Text fontSize="sm" color="fg.muted">
-              • Leave source blank for auto‑detect.
+              • You can choose the source language to be auto detected..
             </Text>
             <Text fontSize="sm" color="fg.muted" mt={1}>
               • Target language is required.
             </Text>
             <Text fontSize="sm" color="fg.muted" mt={1}>
-              • All columns/rows are selected by default.
+              • By default all columns and rows are selected.
             </Text>
           </Box>
           <Button onClick={clearAll}>Clear All</Button>
@@ -205,12 +205,9 @@ function FilePreviewPage() {
               label="Source Language"
               onChange={(e) => setSourceLang(e.target.value as Language)}
               renderValue={(v) =>
-                v ? getLanguageName(v as string) : "Auto Detect"
+                getLanguageName(v as string)
               }
             >
-              <MenuItem value="">
-                <em>Auto Detect</em>
-              </MenuItem>
               {languages.map((lang) => (
                 <MenuItem key={lang} value={lang}>
                   {getLanguageName(lang)}

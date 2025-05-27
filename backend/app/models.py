@@ -142,8 +142,8 @@ class FilePublic(FileBase):
 
 
 class FileUpdate(SQLModel):
-    source_language: Language | None = Field(default=None)
-    target_language: Language | None = Field(default=None)
+    source_language: Language = Field()
+    target_language: Language = Field()
     filename: str | None = Field(default=None, max_length=255)
     selected_columns: list[int] = Field(sa_column=Column(JSON), default=[])
     selected_rows: list[int] = Field(sa_column=Column(JSON), default=[])
