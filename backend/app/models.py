@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 import sqlalchemy.types as types
-from pydantic import AfterValidator, EmailStr
+from pydantic import AfterValidator, EmailStr, model_validator
 from sqlalchemy import Dialect
 from sqlalchemy.sql.type_api import _T
 from sqlmodel import JSON, Column, Field, Relationship, SQLModel
@@ -181,6 +181,27 @@ class ShortcutsPublic(SQLModel):
         "validate_assignment": True,
         "extra": "forbid",
     }
+
+    @model_validator(mode="after")
+    def check_unique_shortcuts(self) -> "ShortcutsPublic":
+        values = {
+            "skip": self.skip,
+            "accept": self.accept,
+            "accept_and_next": self.accept_and_next,
+            "previous": self.previous,
+        }
+
+        seen: dict[str, ShortcutStr | None] = {}
+        for field, shortcut in values.items():
+            if shortcut is None:
+                continue
+            if shortcut in seen:
+                raise ValueError(
+                    f"Shortcut '{shortcut}' is used for both '{seen[shortcut]}' and '{field}'"
+                )
+            seen[shortcut] = field
+
+        return self
 
 
 class Shortcuts(ShortcutsPublic, table=True):
