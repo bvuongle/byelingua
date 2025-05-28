@@ -1,0 +1,2 @@
+class NoTranslationPathError(Exception):
+    pass

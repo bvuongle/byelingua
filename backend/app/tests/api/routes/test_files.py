@@ -27,6 +27,9 @@ def override_translator_dependency(client: TestClient):
         def __init__(self):
             self.supported_pairs = {(Language.PL, Language.EN): "dummy"}
 
+        def is_supported(self, src_lang: Language, tgt_lang: Language) -> bool:
+            return (src_lang, tgt_lang) in self.supported_pairs
+
         def translate(
             self, src_lang: Language, tgt_lang: Language, text: str, **kw
         ) -> tuple[str, str]:
@@ -210,23 +213,27 @@ def test_update_file_validation_errors(client: TestClient, db: Session) -> None:
     file_pub = _upload_csv(client, headers)
     fid = file_pub["id"]
 
-    bad_payload = {"selected_columns": [42]}
+    bad_column = {
+        "source_language": Language.PL.value,
+        "target_language": Language.ES.value,
+        "selected_columns": [42],
+    }
     resp = client.patch(
         f"{settings.API_V1_STR}/files/{fid}/",
         headers=headers,
-        json=bad_payload,
+        json=bad_column,
     )
     assert resp.status_code == 400
     assert "Selected columns exceed" in resp.json()["detail"]
 
-    bad_language_paris = {
+    bad_language_pairs = {
         "source_language": Language.PL.value,
         "target_language": Language.ES.value,  # assuming PL->ES not in DummyTranslator
     }
     resp = client.patch(
         f"{settings.API_V1_STR}/files/{fid}/",
         headers=headers,
-        json=bad_language_paris,
+        json=bad_language_pairs,
     )
     assert resp.status_code == 400
     assert resp.json()["detail"] == "Unsupported language pair"

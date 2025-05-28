@@ -205,8 +205,7 @@ def update_file(
                 detail="Selected columns exceed the number of headers or is negative",
             )
 
-    language_pair = (payload.source_language, payload.target_language)
-    if language_pair not in translator.supported_pairs:
+    if not translator.is_supported(payload.source_language, payload.target_language):
         raise HTTPException(
             status_code=400,
             detail="Unsupported language pair",
