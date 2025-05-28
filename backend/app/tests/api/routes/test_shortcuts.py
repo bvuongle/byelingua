@@ -28,6 +28,9 @@ INVALID_PAYLOADS = [
     {"previous": "Ctrl + Unknown"},
     {"skip": ["Ctrl + K"]},
     {"accept": 123},
+    {"skip": "K"},
+    {"accept_and_next": "Ctrl + Shift + J", "extra_field": "value"},
+    {"skip": "Ctrl + K", "accept": "Ctrl + K"},
 ]
 
 
@@ -187,3 +190,24 @@ def test_set_shortcuts_payload_not_object(
         json=raw_body,
     )
     assert resp.status_code == 422
+
+
+def test_set_shortcuts_with_duplicate_shortcuts_rejected(
+    client: TestClient, normal_user_token_headers: dict[str, str]
+) -> None:
+    payload = {
+        "skip": "Ctrl + K",
+        "accept": "Alt + M",
+        "accept_and_next": "Ctrl + Shift + J",
+        "previous": "Ctrl + K",  # Duplicate of skip
+    }
+    r = client.post(
+        f"{settings.API_V1_STR}/shortcuts/",
+        headers=normal_user_token_headers,
+        json=payload,
+    )
+    assert r.status_code == 422
+    assert r.json()["detail"]
+    assert any(
+        "used for both 'skip' and 'previous'" in d["msg"] for d in r.json()["detail"]
+    )

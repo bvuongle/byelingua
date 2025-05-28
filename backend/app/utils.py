@@ -144,6 +144,7 @@ def validate_shortcut(value: str | None) -> str | None:
     • Accepts None/empty → returns as-is
     • Raises ValueError for malformed shortcuts
     • Returns a *normalised* version (‘Ctrl + P’, not ‘ctrl+p’) otherwise
+    • Enforces that at least one modifier is present
     """
     if value in (None, ""):
         return value
@@ -154,6 +155,10 @@ def validate_shortcut(value: str | None) -> str | None:
         raise ValueError("Shortcut may not be blank")
 
     *mods, key = parts
+
+    # Ensure at least one modifier is present
+    if not mods:
+        raise ValueError("At least one modifier key (e.g., Ctrl, Alt) is required")
 
     # key must be valid
     if key not in VALID_KEYS:
