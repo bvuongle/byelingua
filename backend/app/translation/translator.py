@@ -152,7 +152,7 @@ class Translator:
             if detected_src_lang is None:
                 message = "Language not recognized"
             elif detected_src_lang != src_lang:
-                message = f"Source language {src_lang.name} does not match detected {detected_src_lang.name}"
+                message = f"Source language {src_lang.name} doesn't match detected {detected_src_lang.name}, translating from {detected_src_lang.name}"
             else:
                 message = ""
 
