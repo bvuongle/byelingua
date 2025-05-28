@@ -225,7 +225,7 @@ function FilePreviewPage() {
               onChange={(e) => setTargetLang(e.target.value as Language)}
               renderValue={(v) => getLanguageName(v as string)}
             >
-              {languages.map((lang) => (
+              {languages.filter(lang => lang !== "auto").map((lang) => (
                 <MenuItem key={lang} value={lang}>
                   {getLanguageName(lang)}
                 </MenuItem>

@@ -128,6 +128,9 @@ class Translator:
     def translate(
         self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
     ) -> tuple[str, str]:
+        if tgt_lang == Language.AUTO:
+            raise ValueError("`auto` language cannot be specified as target language")
+
         detected_src_lang = self._detector.detect(text)
 
         if detected_src_lang == tgt_lang:
