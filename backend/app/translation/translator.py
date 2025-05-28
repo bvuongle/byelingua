@@ -131,22 +131,22 @@ class Translator:
 
     def translate(
         self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
-    ) -> tuple[str, str]:
+    ) -> tuple[str, Language | None, str]:
         if tgt_lang == Language.AUTO:
             raise ValueError("`auto` language cannot be specified as target language")
 
         if text == "":
-            return "", ""
+            return "", None, ""
 
         detected_src_lang = self._detector.detect(text)
 
         if detected_src_lang == tgt_lang:
-            return text, ""
+            return text, detected_src_lang, ""
 
         try:
             if src_lang == Language.AUTO:
                 if detected_src_lang is None:
-                    return "", "Unable to recognize source language"
+                    return "", None, "Unable to recognize source language"
                 src_lang = detected_src_lang
 
             if detected_src_lang is None:
@@ -157,10 +157,10 @@ class Translator:
                 message = ""
 
             text = self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
-            return text, message
+            return text, detected_src_lang, message
 
         except NoTranslationPathError as e:
-            return "", str(e)
+            return "", detected_src_lang, str(e)
 
     def translate_batch(
         self,
@@ -168,7 +168,7 @@ class Translator:
         tgt_lang: Language,
         texts: list[str],
         **generation_kwargs,
-    ) -> list[tuple[str, str]]:
+    ) -> list[tuple[str, Language | None, str]]:
         return [
             self.translate(src_lang, tgt_lang, text, **generation_kwargs)
             for text in texts

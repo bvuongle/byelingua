@@ -116,9 +116,10 @@ def get_file_row(
             column_name=column_name,
             original=original,
             translation=translated,
+            detected_language=detected_language,
             error_msg=error_msg,
         )
-        for column_name, original, (translated, error_msg) in zip(
+        for column_name, original, (translated, detected_language, error_msg) in zip(
             selected_headers, content, translation, strict=False
         )
     ]
@@ -158,6 +159,7 @@ def update_file_row(
             column_name=column_name,
             original=original,
             translation=original,
+            detected_language=None,
             error_msg="",
         )
         for column_name, original in zip(selected_headers, content, strict=False)
