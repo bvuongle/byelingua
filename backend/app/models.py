@@ -153,6 +153,7 @@ class ColumnTranslation(SQLModel):
     column_name: str
     original: str
     translation: str
+    detected_language: Language | None
     error_msg: str
 
 

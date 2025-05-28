@@ -102,8 +102,11 @@ def test_is_supported_unsupported(translator: Translator):
 @pytest.mark.slow
 def test_translate_incorrect_source_language(translator: Translator):
     assert (Language.PL, Language.EN) in translator.supported_pairs
-    result, message = translator.translate(Language.PL, Language.EN, "Bonjour!")
+    result, detected_language, message = translator.translate(
+        Language.PL, Language.EN, "Bonjour!"
+    )
     assert result == "Bonjour!"
+    assert detected_language == Language.FR
     assert "does not match detected" in message
     assert "FR" in message  # should mention detected French language
 
@@ -111,8 +114,11 @@ def test_translate_incorrect_source_language(translator: Translator):
 @pytest.mark.slow
 def test_translate_unsupported_language_pair(translator: Translator):
     assert not translator.is_supported(Language.DE, Language.ES)
-    result, message = translator.translate(Language.DE, Language.ES, "Guten Tag!")
+    result, detected_language, message = translator.translate(
+        Language.DE, Language.ES, "Guten Tag!"
+    )
     assert result == ""
+    assert detected_language == Language.DE
     assert "No translation path found" in message
     assert "DE" in message and "ES" in message
 
@@ -121,26 +127,26 @@ def test_translate_unsupported_language_pair(translator: Translator):
 def test_translate_garbage_auto(translator: Translator):
     assert translator.is_supported(Language.AUTO, Language.ES)
     garbage_text = "xysdf 1234 !@#$"
-    result, _ = translator.translate(Language.AUTO, Language.EN, garbage_text)
+    result, _, _ = translator.translate(Language.AUTO, Language.EN, garbage_text)
     assert result == "xysdf 1234 !@#$"
 
 
 @pytest.mark.slow
 def test_translate_garbage_forced_language(translator: Translator):
     garbage_text = "xysdf 1234 !@#$"
-    result, _ = translator.translate(Language.FR, Language.EN, garbage_text)
+    result, _, _ = translator.translate(Language.FR, Language.EN, garbage_text)
     assert result == "xysdf 1234 !@#$"
 
 
 @pytest.mark.slow
 def test_translate_empty_text(translator: Translator):
-    result, message = translator.translate(Language.PL, Language.EN, "")
+    result, _, message = translator.translate(Language.PL, Language.EN, "")
     assert result == ""
     assert message == ""
 
 
 @pytest.mark.slow
 def test_translate_same_language(translator: Translator):
-    result, message = translator.translate(Language.EN, Language.EN, "awesome")
+    result, _, message = translator.translate(Language.EN, Language.EN, "awesome")
     assert result == "awesome"
     assert message == ""
