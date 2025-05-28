@@ -41,7 +41,7 @@ class Translator:
         try:
             self._get_translation_chain(src_lang, tgt_lang)
             return True
-        except ValueError:
+        except NoTranslationPathError:
             pass
         return False
 
@@ -94,7 +94,7 @@ class Translator:
             return [src_lang, Language.EN, tgt_lang]
 
         raise NoTranslationPathError(
-            f"No translation path found from {src_lang.value} to {tgt_lang.value}"
+            f"No translation path found from {src_lang.name} to {tgt_lang.name}"
         )
 
     def _translate_chain(
@@ -107,8 +107,11 @@ class Translator:
     def translate_raw(
         self, src_lang: Language, tgt_lang: Language, text: str, **generation_kwargs
     ) -> str:
-        if src_lang == tgt_lang:
+        if text == "":
             return ""
+
+        if src_lang == tgt_lang:
+            return text
 
         chain = self._get_translation_chain(src_lang, tgt_lang)
         text = self._translate_chain(chain, text, **generation_kwargs)
@@ -132,24 +135,30 @@ class Translator:
         if tgt_lang == Language.AUTO:
             raise ValueError("`auto` language cannot be specified as target language")
 
+        if text == "":
+            return "", ""
+
         detected_src_lang = self._detector.detect(text)
 
         if detected_src_lang == tgt_lang:
             return text, ""
 
-        if src_lang == Language.AUTO:
-            if detected_src_lang is None:
-                return "", "Unable to recognize source language"
-            src_lang = detected_src_lang
-
-        elif detected_src_lang is not None and detected_src_lang != src_lang:
-            error_msg = f"Source language {src_lang} does not match detected {detected_src_lang}"
-            return "", error_msg
-
         try:
+            if src_lang == Language.AUTO:
+                if detected_src_lang is None:
+                    return "", "Unable to recognize source language"
+                src_lang = detected_src_lang
+
+            if detected_src_lang is None:
+                message = "Language not recognized"
+            elif detected_src_lang != src_lang:
+                message = f"Source language {src_lang.name} does not match detected {detected_src_lang.name}"
+            else:
+                message = ""
+
             text = self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
-            message = "Language not recognized" if detected_src_lang is None else ""
             return text, message
+
         except NoTranslationPathError as e:
             return "", str(e)
 
