@@ -3,6 +3,7 @@ from typing import Any
 from transformers import MarianMTModel, MarianTokenizer
 
 from app.translation.detector import Detector
+from app.translation.exceptions import NoTranslationPathError
 from app.translation.languages import Language
 from app.translation.singleton import singleton
 from app.utils import logger
@@ -92,7 +93,7 @@ class Translator:
         ) in self.supported_pairs:
             return [src_lang, Language.EN, tgt_lang]
 
-        raise ValueError(
+        raise NoTranslationPathError(
             f"No translation path found from {src_lang.value} to {tgt_lang.value}"
         )
 
@@ -145,9 +146,12 @@ class Translator:
             error_msg = f"Source language {src_lang} does not match detected {detected_src_lang}"
             return "", error_msg
 
-        text = self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
-        message = "Language not recognized" if detected_src_lang is None else ""
-        return text, message
+        try:
+            text = self.translate_raw(src_lang, tgt_lang, text, **generation_kwargs)
+            message = "Language not recognized" if detected_src_lang is None else ""
+            return text, message
+        except NoTranslationPathError as e:
+            return "", str(e)
 
     def translate_batch(
         self,
