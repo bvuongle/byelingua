@@ -85,7 +85,9 @@ function FilePreviewPage() {
 		if (!fileMeta) return;
 		setSourceLang(fileMeta.source_language);
 		setTargetLang(fileMeta.target_language);
-		setSelectedColumns(fileMeta?.selected_columns || []);
+		if (selectedColumns.length === 0) {
+			setSelectedColumns(fileMeta?.selected_columns || []);
+		}
 		if (
 			!includeRows &&
 			!excludeRows &&
@@ -99,7 +101,7 @@ function FilePreviewPage() {
 				fileMeta.selected_rows ? fileMeta.selected_rows.join(', ') : '',
 			);
 		}
-	}, [fileMeta, includeRows, excludeRows, rowInputsChanged]);
+	}, [fileMeta]);
 
 	const maxRows = fileMeta?.total_rows || 0;
 	const computedRows = computeRows(includeRows, excludeRows, maxRows);
@@ -131,7 +133,7 @@ function FilePreviewPage() {
 			const cols =
 				selectedColumns.length > 0
 					? selectedColumns
-					: filePreview?.headers.map((_, i) => i);
+					: filePreview?.headers.map((_, i) => i) || [];
 
 			const rows = computeRows(includeRows, excludeRows, maxRows);
 			setSelectedRows(rows);
@@ -151,8 +153,7 @@ function FilePreviewPage() {
 			toast.showSuccessToast('Translation session initialized');
 			const rowsToTranslate = computeRows(includeRows, excludeRows, maxRows);
 			const isResume =
-				fileMeta &&
-				fileMeta.selected_rows &&
+				fileMeta?.selected_rows &&
 				fileMeta.selected_rows.length > 0 &&
 				!rowInputsChanged;
 			let startRowIndex = rowsToTranslate[0] || 1;
@@ -190,8 +191,7 @@ function FilePreviewPage() {
 		);
 
 	const isResume =
-		fileMeta &&
-		fileMeta.selected_rows &&
+		fileMeta?.selected_rows &&
 		fileMeta.selected_rows.length > 0 &&
 		!rowInputsChanged;
 	const buttonText = isResume ? 'Resume Translation' : 'Start Translation';
@@ -281,11 +281,16 @@ function FilePreviewPage() {
 							labelId='cols-label'
 							multiple
 							value={selectedColumns}
-							onChange={(e) =>
-								setSelectedColumns(
-									(e.target.value as number[]).filter((v) => v >= 0),
-								)
-							}
+							onChange={(e) => {
+								const value = e.target.value as number[];
+								if (value.includes(-1)) {
+									setSelectedColumns(
+										filePreview?.headers.map((_, i) => i) || [],
+									);
+								} else {
+									setSelectedColumns(value.filter((v) => v >= 0));
+								}
+							}}
 							renderValue={(sel) =>
 								(sel as number[]).map((i) => filePreview?.headers[i]).join(', ')
 							}
@@ -314,9 +319,7 @@ function FilePreviewPage() {
 						? computedRows.length === 0
 							? `All ${maxRows} rows selected.`
 							: `${computedRows.length} row(s) selected out of ${maxRows}`
-						: fileMeta &&
-							  fileMeta.selected_rows &&
-							  fileMeta.selected_rows.length === 0
+						: fileMeta?.selected_rows && fileMeta.selected_rows.length === 0
 							? `All ${maxRows} rows selected.`
 							: `${selectedRows.length} row(s) selected out of ${maxRows}`}
 				</Text>
