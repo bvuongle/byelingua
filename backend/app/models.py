@@ -125,7 +125,7 @@ class FileBase(SQLModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now())
     last_modified: datetime = Field(default_factory=lambda: datetime.now())
     file_path: Path = Field(sa_column=Column(PathType))
-    source_language: Language = Field(default=Language.PL)
+    source_language: Language = Field(default=Language.AUTO)
     target_language: Language = Field(default=Language.EN)
 
 
