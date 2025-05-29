@@ -204,9 +204,7 @@ function FilePreviewPage() {
               value={sourceLang ?? ""}
               label="Source Language"
               onChange={(e) => setSourceLang(e.target.value as Language)}
-              renderValue={(v) =>
-                getLanguageName(v as string)
-              }
+              renderValue={(v) => getLanguageName(v as string)}
             >
               {languages.map((lang) => (
                 <MenuItem key={lang} value={lang}>
@@ -225,11 +223,13 @@ function FilePreviewPage() {
               onChange={(e) => setTargetLang(e.target.value as Language)}
               renderValue={(v) => getLanguageName(v as string)}
             >
-              {languages.filter(lang => lang !== "auto").map((lang) => (
-                <MenuItem key={lang} value={lang}>
-                  {getLanguageName(lang)}
-                </MenuItem>
-              ))}
+              {languages
+                .filter((lang) => lang !== "auto")
+                .map((lang) => (
+                  <MenuItem key={lang} value={lang}>
+                    {getLanguageName(lang)}
+                  </MenuItem>
+                ))}
             </Select>
           </FormControl>
 
