@@ -41,6 +41,7 @@ export function TranslateRowPage() {
     data: fileMeta,
     isLoading: filesLoading,
     isError: filesError,
+    isFetching: filesFetching,
   } = useQuery<FilesGetFileResponse>({
     queryKey: ["files", fileId],
     queryFn: () => FilesService.getFile({ fileId }),
@@ -60,6 +61,7 @@ export function TranslateRowPage() {
     data: rowData,
     isLoading: rowLoading,
     isError: rowError,
+    isFetching: rowFetching,
   } = useQuery<FilesGetFileRowResponse>({
     queryKey: ["file-row", fileId, actualIndex],
     queryFn: () => FilesService.getFileRow({ fileId, rowIndex: actualIndex }),
@@ -151,7 +153,7 @@ export function TranslateRowPage() {
     return Boolean(detectedLang && detectedLang !== fileMeta.source_language)
   }
 
-  if (filesLoading || rowLoading) {
+  if (filesLoading || rowLoading || filesFetching || rowFetching) {
     return (
       <Container centerContent py={16}>
         <Spinner size="xl" />

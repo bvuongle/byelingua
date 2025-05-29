@@ -14,7 +14,7 @@ import { InputGroup } from "@/components/ui/input-group"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 import { confirmPasswordRules, emailPattern, passwordRules } from "@/utils"
-import Logo from "/assets/images/fastapi-logo.svg"
+import Logo from "/assets/images/byelingua-logo.png"
 
 export const Route = createFileRoute("/signup")({
   component: SignUp,
@@ -66,14 +66,25 @@ function SignUp() {
           gap={4}
           centerContent
         >
-          <Image
-            src={Logo}
-            alt="FastAPI logo"
-            height="auto"
-            maxW="2xs"
-            alignSelf="center"
-            mb={4}
-          />
+          <Flex align={"center"} justify="center" mb={2}>
+            <Image
+              src={Logo}
+              alt="ByeLingua Logo"
+              height="6rem"
+              maxW="2xs"
+              alignSelf="center"
+              mb={4}
+            />
+            <Text
+              fontSize="4xl"
+              fontWeight="bold"
+              color="fg"
+              textAlign="center"
+              ml={5}
+            >
+              ByeLingua
+            </Text>
+          </Flex>
           <Field
             invalid={!!errors.full_name}
             errorText={errors.full_name?.message}
